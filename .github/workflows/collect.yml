@@ -1,0 +1,61 @@
+name: 공고·시세 모으기
+
+# 매일 05:17(한국 시간)에 청약홈 최근 14일 공고를 모아 공고문 조건과 주택형별 시세를 02_data/latest.json으로 커밋한다.
+# 공개 저장소라 실행 로그와 결과를 누구나 본다. 공공데이터만 다루고 개인 정보는 다루지 않는다.
+on:
+  schedule:
+    - cron: '17 20 * * *'
+  workflow_dispatch:
+    inputs:
+      names:
+        description: '지난 공고를 이름으로 찾아 02_data/check.json을 만들 때 단지명(여럿이면 쉼표로 구분). 비우면 평소 모으기'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 공고문 PDF 글자 읽기 도구 설치
+        # poppler-data가 없으면 한글 CID 글꼴 PDF가 빈 글자로 뽑힌다
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils poppler-data
+      - name: 신고가 끝난 달의 실거래 캐시
+        uses: actions/cache@v4
+        with:
+          path: cache
+          key: trades-${{ github.run_id }}
+          restore-keys: trades-
+      - name: 시험
+        run: python -m unittest discover -s 01_code
+      - name: 모으기
+        env:
+          NAMES: ${{ inputs.names }}
+        run: |
+          if [ -n "$NAMES" ]; then python 01_code/presale.py check; else python 01_code/presale.py collect; fi
+      - name: 결과를 main에 저장
+        run: |
+          git add 02_data
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: $(date -u +%F) 공고·시세"
+          for attempt in 1 2 3; do
+            git pull --no-rebase --no-edit origin main && git push origin HEAD:main && exit 0
+            sleep 5
+          done
+          exit 1
