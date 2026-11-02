@@ -17,7 +17,8 @@
   R3 알림 문턱: 채택한 방법의 P80을 「등급을 줄 최소 차익(분양가 대비 비율)」로 result.json에 적는다.
 - 출력: <출력 폴더>/<방법>-errors.tsv(공고마다), <출력 폴더>/result.json, 마지막 줄 `VERDICT ...`.
 
-사용: python 01_code/backtest.py <자료 폴더> <출력 폴더> [v2 예측 TSV]
+사용: python 01_code/backtest.py <자료 폴더> <출력 폴더>
+  v2는 카카오 좌표가 필요해 환경 변수 KAKAO_REST_API_KEY가 있을 때만 잰다(Actions). v2도 v1과 같은 오차 정의(주택형마다)를 쓴다.
 """
 
 import datetime as dt
@@ -28,6 +29,7 @@ import sys
 from pathlib import Path
 
 import presale
+import v2
 
 SEED = 20261103
 SHUFFLES = 200
@@ -139,16 +141,15 @@ def write_tsv(path, rows):
     path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
-def read_v2(path):
-    """v2 예측 TSV(key, pred ㎡당)를 읽는다. v2는 카카오 좌표가 필요해 Actions에서 따로 만든다."""
-    got = {}
-    for line in Path(path).read_text(encoding='utf-8').splitlines()[1:]:
-        key, pred = line.split('\t')[:2]
-        got[key] = float(pred) if pred else None
-    return got
+def v2_of(n, area, price, data, geocode):
+    d = dt.date.fromisoformat(n['detail']['RCRIT_PBLANC_DE'])
+    start = d - dt.timedelta(days=365)
+    pool = [t for t in load_rows(data, n['code'], months_between(start, d)) if start.isoformat() <= t['date'] < d.isoformat()]
+    got = v2.estimate(n['detail'].get('HSSPLY_ADRES', ''), area, price, pool, d.year, f"{n['sido']} {n['sigungu']}".strip(), geocode)
+    return got['per'] if got else None
 
 
-def main(data, out, v2_path=None):
+def main(data, out):
     data, out = Path(data), Path(out)
     out.mkdir(parents=True, exist_ok=True)
     notices = json.loads((data / 'notices.json').read_text(encoding='utf-8'))
@@ -166,12 +167,13 @@ def main(data, out, v2_path=None):
         verdict.append('V1_NO_SIGNAL')
     verdict.append('V1_GRADES_OK' if m1['P80'] <= P80_V1_OK else 'V1_GRADES_NOT_OK')
     adopted = m1
-    if v2_path:
-        got = read_v2(v2_path)
-        v2 = [{**r, 'pred': got.get(r['key']), 'err': None if got.get(r['key']) is None else got[r['key']] / r['truth'] - 1} for r in v1]
-        write_tsv(out / 'v2-errors.tsv', v2)
-        m2 = metrics(v2)
-        m2['shuffle_share'] = shuffle_share(v2, m2['MdAPE']) if m2['MdAPE'] is not None else None
+    geocode = v2.Geocoder()
+    if geocode.key:
+        rows2 = notice_rows(notices, data, lambda n, area, price: v2_of(n, area, price, data, geocode))
+        write_tsv(out / 'v2-errors.tsv', rows2)
+        m2 = metrics(rows2)
+        m2['geocode_calls'], m2['geocode_misses'] = geocode.calls, geocode.misses
+        m2['shuffle_share'] = shuffle_share(rows2, m2['MdAPE']) if m2['MdAPE'] is not None else None
         result['v2'] = m2
         adopt = m2['MdAPE'] is not None and m2['MdAPE'] <= m1['MdAPE'] - V2_MARGIN and m2['coverage'] >= m1['coverage'] - COVERAGE_SLACK
         verdict.append('ADOPT_V2' if adopt else 'KEEP_V1')

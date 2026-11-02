@@ -1,0 +1,50 @@
+name: 시세 계산 백테스트
+
+# 손으로만 돌린다. 판정 규칙은 01_code/backtest.py 머리에 있고, 결과는 03_notes/backtest/에 커밋한다.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: backtest
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+      KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 지난 공고·실거래 캐시
+        uses: actions/cache@v4
+        with:
+          path: bt
+          key: backtest-${{ github.run_id }}
+          restore-keys: backtest-
+      - name: 시험
+        run: python -m unittest discover -s 01_code
+      - name: 자료 받기
+        run: python 01_code/backtest_data.py bt
+      - name: 백테스트
+        run: python 01_code/backtest.py bt 03_notes/backtest
+      - name: 결과를 main에 저장
+        run: |
+          git add 03_notes/backtest
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: $(date -u +%F) 백테스트 결과"
+          for attempt in 1 2 3; do
+            git pull --no-rebase --no-edit origin main && git push origin HEAD:main && exit 0
+            sleep 5
+          done
+          exit 1
