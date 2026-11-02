@@ -37,25 +37,38 @@ def main(out):
             if sido not in SIDOS or str(p.get('RENT_SECD') or '0') != '0' or p.get('HOUSE_DTL_SECD') != '01':
                 continue
             models = presale.applyhome('getAPTLttotPblancMdl', {'cond[HOUSE_MANAGE_NO::EQ]': p['HOUSE_MANAGE_NO'], 'cond[PBLANC_NO::EQ]': p['PBLANC_NO']})
-            code = presale.sigungu_code(f'{sido} {sgg}'.strip())
             notices.append({'detail': {k: v for k, v in p.items() if k not in presale.DROP_FIELDS}, 'models': models,
-                            'sido': sido, 'sigungu': sgg, 'umd': umd, 'code': code})
-        out.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(notices, ensure_ascii=False, indent=1), encoding='utf-8')
+                            'sido': sido, 'sigungu': sgg, 'umd': umd, 'code': None})
+    # 연결이 끊겨 시·군·구 코드를 못 받은 공고는 다음 실행이 다시 받는다
+    failed = 0
+    for n in notices:
+        if not n['code']:
+            try:
+                n['code'] = presale.sigungu_code(f"{n['sido']} {n['sigungu']}".strip())
+            except RuntimeError as ex:
+                failed += 1
+                print(f"{n['detail'].get('HOUSE_NM')}: 시·군·구 코드 실패 {ex}")
+    out.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(notices, ensure_ascii=False, indent=1), encoding='utf-8')
     need = sorted({(n['code'], ym) for n in notices if n['code'] for ym in months_around(n['detail']['RCRIT_PBLANC_DE'])
                    if ym <= f'{today.year}{today.month:02d}'})
-    print(f'공고 {len(notices)}건, 받을 시·군·구-월 {len(need)}개')
+    print(f'공고 {len(notices)}건(코드 실패 {failed}), 받을 시·군·구-월 {len(need)}개')
     done = 0
     for code, ym in need:
         f = out / 'trades' / code / f'{ym}.json'
         if not f.exists():
-            rows = presale.trades(code, ym) + presale.trades(code, ym, url=presale.SILV)
+            try:
+                rows = presale.trades(code, ym) + presale.trades(code, ym, url=presale.SILV)
+            except RuntimeError as ex:  # 다음 실행이 다시 받는다
+                failed += 1
+                print(f'{code} {ym}: 실패 {ex}')
+                continue
             f.parent.mkdir(parents=True, exist_ok=True)
             f.write_text(json.dumps(rows, ensure_ascii=False), encoding='utf-8')
         done += 1
         if done % 100 == 0:
             print(f'{done}/{len(need)} {dt.datetime.now(dt.timezone.utc):%H:%M:%SZ}', flush=True)
-    print(f'끝 {done}/{len(need)}')
+    print(f'끝: 받은 것 {done}/{len(need)}, 실패 {failed}')
 
 
 if __name__ == '__main__':
