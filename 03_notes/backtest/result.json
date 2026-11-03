@@ -1,60 +1,114 @@
 {
- "v1": {
-  "N": 81,
-  "predicted": 81,
-  "coverage": 1.0,
-  "MdAPE": 0.15839184514499127,
-  "P80": 0.2753360849686832,
-  "bias": -0.15209401261233257,
-  "shuffle_share": 0.0,
-  "seeded_defect_MdAPE": {
-   "x1.10": 0.12505230859309036,
-   "x0.90": 0.23688461135109928
+ "yeongnam_fit": {
+  "v1": {
+   "N": 81,
+   "predicted": 81,
+   "coverage": 1.0,
+   "MdAPE": 0.15839184514499127,
+   "P80": 0.2753360849686832,
+   "bias": -0.15209401261233257,
+   "shuffle_share": 0.0,
+   "seeded_defect_MdAPE": {
+    "x1.10": 0.12505230859309036,
+    "x0.90": 0.23688461135109928
+   },
+   "defect_alive": true,
+   "range_hit": null,
+   "fallback_types": 0
   },
-  "defect_alive": true
+  "v0": {
+   "N": 81,
+   "predicted": 81,
+   "coverage": 1.0,
+   "MdAPE": 0.02645321610228135,
+   "P80": 0.08341466738743075,
+   "bias": 0.0006363684455128471,
+   "shuffle_share": 0.0,
+   "seeded_defect_MdAPE": {
+    "x1.10": 0.10186182042196545,
+    "x0.90": 0.10372426378592026
+   },
+   "defect_alive": true,
+   "range_hit": 0.6533333333333333,
+   "fallback_types": 22
+  },
+  "v2c": {
+   "N": 81,
+   "predicted": 81,
+   "coverage": 1.0,
+   "MdAPE": 0.0235585146869407,
+   "P80": 0.07817394939724148,
+   "bias": 0.0036748912464535932,
+   "shuffle_share": 0.0,
+   "seeded_defect_MdAPE": {
+    "x1.10": 0.10521588413911465,
+    "x0.90": 0.09746645684517663
+   },
+   "defect_alive": true,
+   "range_hit": 0.6666666666666666,
+   "fallback_types": 22
+  }
  },
- "v2b": {
-  "N": 81,
-  "predicted": 81,
-  "coverage": 1.0,
-  "MdAPE": 0.17229088018657013,
-  "P80": 0.32153473071842265,
-  "bias": -0.13059609293398933,
-  "shuffle_share": 0.0,
-  "seeded_defect_MdAPE": {
-   "x1.10": 0.15339874269133547,
-   "x0.90": 0.25506179216791314
+ "holdout": {
+  "v1": {
+   "N": 98,
+   "predicted": 98,
+   "coverage": 1.0,
+   "MdAPE": 0.12326296217436977,
+   "P80": 0.2231883283469397,
+   "bias": -0.11285427057175729,
+   "shuffle_share": 0.0,
+   "seeded_defect_MdAPE": {
+    "x1.10": 0.08491930974122108,
+    "x0.90": 0.20156884351458154
+   },
+   "defect_alive": true,
+   "range_hit": null,
+   "fallback_types": 0
   },
-  "defect_alive": true,
-  "fallback_types": 154,
-  "fitted_types": 212,
-  "range_hit": 0.43137254901960786,
-  "range_notices": 51,
-  "geocode_calls": 1469,
-  "geocode_misses": 142,
-  "geocode_errors": 0,
-  "kapt_calls": 628,
-  "kapt_errors": 0,
-  "kapt_stopped": "",
-  "comps_hh_unknown": 3690,
-  "coef_median": {
-   "age": -0.0271,
-   "presale": 0.0,
-   "log_hh": 0.09134999999999999,
-   "top": 0.2847,
-   "km": -0.0112
+  "v0": {
+   "N": 98,
+   "predicted": 98,
+   "coverage": 1.0,
+   "MdAPE": 0.03006606088588515,
+   "P80": 0.048982155081599976,
+   "bias": -0.023870387862429843,
+   "shuffle_share": 0.0,
+   "seeded_defect_MdAPE": {
+    "x1.10": 0.07426898105164681,
+    "x0.90": 0.12209080119666677
+   },
+   "defect_alive": true,
+   "range_hit": 0.5729166666666666,
+   "fallback_types": 19
+  },
+  "v2c": {
+   "N": 98,
+   "predicted": 98,
+   "coverage": 1.0,
+   "MdAPE": 0.024519756748380334,
+   "P80": 0.039656131651373994,
+   "bias": -0.014837180562520702,
+   "shuffle_share": 0.0,
+   "seeded_defect_MdAPE": {
+    "x1.10": 0.08367910138122736,
+    "x0.90": 0.1133534625062686
+   },
+   "defect_alive": true,
+   "range_hit": 0.71875,
+   "fallback_types": 19
   }
  },
  "adopted": {
-  "method": "v1",
-  "MdAPE": 0.15839184514499127,
-  "P80": 0.2753360849686832,
-  "N": 81
+  "method": "v2c",
+  "MdAPE": 0.024519756748380334,
+  "P80": 0.039656131651373994,
+  "N": 98,
+  "set": "검증"
  },
- "alert_min_gap_ratio": 0.2753360849686832,
+ "alert_min_gap_ratio": 0.039656131651373994,
  "verdict": [
   "CONTROL_OK",
-  "V1_GRADES_NOT_OK",
-  "KEEP_V1"
+  "ADOPT_V2C"
  ]
 }
