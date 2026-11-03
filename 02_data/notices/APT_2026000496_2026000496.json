@@ -1,0 +1,29 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "주택유형": "민영",
+  "해당지역": "인천광역시 거주자",
+  "기타지역": "서울특별시, 경기도 거주자",
+  "규제지역여부": "비규제지역",
+  "전매제한": "3년 *소유권이전등기일까지 (다만, 그 기간이 3년을 초과하는 경우 3년)",
+  "재당첨제한": "10년",
+  "거주의무기간": "없음",
+  "분양가상한제": "적용",
+  "택지유형": "공공택지 / 대규모 택지개발지구"
+ },
+ "resale_months": 36,
+ "resale_fallback_months": 36,
+ "residence_months": 0,
+ "movein_months": 57,
+ "deposit": 0.05,
+ "deposit_found": [
+  "10",
+  "5"
+ ],
+ "mid_interest": "이자후불",
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "인천광역시 거주자  서울특별시, 경기도 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000496&pblancNo=2026000496&atchmnflSeqNo=1999033&atchmnflSn=21"
+}

@@ -1,0 +1,24 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "재당첨제한": "10년",
+  "전매제한": "3년",
+  "거주의무기간": "없음",
+  "분양가상한제": "적용",
+  "택지유형": "공공택지, 대규모 택지개발지구"
+ },
+ "resale_months": 36,
+ "resale_fallback_months": 36,
+ "residence_months": 0,
+ "movein_months": 44,
+ "deposit": 0.1,
+ "deposit_found": [
+  "10"
+ ],
+ "mid_interest": "이자후불",
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000517&pblancNo=2026000517&atchmnflSeqNo=2001261&atchmnflSn=6"
+}
