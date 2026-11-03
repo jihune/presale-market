@@ -37,6 +37,20 @@ class V2(unittest.TestCase):
         got = v2.estimate('시 구 대상동 1', 84.9, 80000, pool, 2026, '시 구', spots.get)
         self.assertEqual({c['apt'] for c in got['comps']}, {'신축', '분양권', '신축2'})
 
+    def test_geocoder_retries_and_does_not_remember_failures(self):
+        from unittest import mock
+        ok = mock.MagicMock()
+        ok.__enter__.return_value.read.return_value = b'{"documents": [{"y": "36.1", "x": "128.3"}]}'
+        g = v2.Geocoder(key='k')
+        with mock.patch.object(v2.time, 'sleep'), \
+                mock.patch.object(v2.urllib.request, 'urlopen', side_effect=[ConnectionResetError(104, 'reset'), ok]):
+            self.assertEqual(g('주소'), (36.1, 128.3))
+        g2 = v2.Geocoder(key='k')
+        with mock.patch.object(v2.time, 'sleep'), \
+                mock.patch.object(v2.urllib.request, 'urlopen', side_effect=ConnectionResetError(104, 'reset')):
+            self.assertIsNone(g2('주소'))
+        self.assertEqual((g2.errors, g2.misses, '주소' in g2.memo), (1, 0, False))
+
     def test_no_key_means_no_estimate(self):
         g = v2.Geocoder(key='')
         self.assertIsNone(g('경상북도 구미시 형곡동 141-11'))
