@@ -7,22 +7,53 @@
   "P80": 0.2753360849686832,
   "bias": -0.15209401261233257,
   "shuffle_share": 0.0,
-  "seeded_defect_MdAPE": 0.12505230859309036
+  "seeded_defect_MdAPE": {
+   "x1.10": 0.12505230859309036,
+   "x0.90": 0.23688461135109928
+  },
+  "defect_alive": true
  },
- "v2": {
+ "v2b": {
   "N": 81,
-  "predicted": 56,
-  "coverage": 0.691358024691358,
-  "MdAPE": 0.2865851216098628,
-  "P80": 0.4430589425210014,
-  "bias": -0.2865851216098628,
-  "geocode_calls": 1168,
-  "geocode_misses": 141,
-  "shuffle_share": 0.03
+  "predicted": 81,
+  "coverage": 1.0,
+  "MdAPE": 0.17229088018657013,
+  "P80": 0.32153473071842265,
+  "bias": -0.13059609293398933,
+  "shuffle_share": 0.0,
+  "seeded_defect_MdAPE": {
+   "x1.10": 0.15339874269133547,
+   "x0.90": 0.25506179216791314
+  },
+  "defect_alive": true,
+  "fallback_types": 154,
+  "fitted_types": 212,
+  "range_hit": 0.43137254901960786,
+  "range_notices": 51,
+  "geocode_calls": 1469,
+  "geocode_misses": 142,
+  "geocode_errors": 0,
+  "kapt_calls": 628,
+  "kapt_errors": 0,
+  "kapt_stopped": "",
+  "comps_hh_unknown": 3690,
+  "coef_median": {
+   "age": -0.0271,
+   "presale": 0.0,
+   "log_hh": 0.09134999999999999,
+   "top": 0.2847,
+   "km": -0.0112
+  }
+ },
+ "adopted": {
+  "method": "v1",
+  "MdAPE": 0.15839184514499127,
+  "P80": 0.2753360849686832,
+  "N": 81
  },
  "alert_min_gap_ratio": 0.2753360849686832,
  "verdict": [
-  "CONTROL_FAIL",
+  "CONTROL_OK",
   "V1_GRADES_NOT_OK",
   "KEEP_V1"
  ]
