@@ -1,8 +1,10 @@
 """백테스트용 지난 공고와 실거래를 받는다(공공데이터만).
 
-사용: python 01_code/backtest_data.py <출력 폴더> [영남|검증]
+사용: python 01_code/backtest_data.py <출력 폴더> [영남|검증] [auto]
   <출력 폴더>/notices.json            2023-01-01 ~ 2025-06-30 민영 분양 공고(임대 제외)와 주택형. 영남(기본)은 대구·경북·부산·울산·경남,
-                                      검증은 3회차의 새 검증 묶음(충청·호남·강원과 대전·세종·광주)
+                                      검증은 3회차의 새 검증 묶음(충청·호남·강원과 대전·세종·광주).
+                                      auto면 자동 점검 창(auto_window: 오늘 − 585일까지 912일)의 공고
+  <출력 폴더>/window.txt              받은 공고 창 「SINCE UNTIL」. 창이 바뀌면 공고 목록을 다시 받는다
   <출력 폴더>/trades/<시군구코드>/<YYYYMM>.json   공고 12개월 전 ~ 18개월 뒤의 매매·분양권 실거래(오늘 이후 달은 받지 않음)
 이미 있는 파일은 다시 받지 않는다. 환경 변수 DATA_GO_KR_KEY가 있어야 한다.
 """
@@ -23,6 +25,12 @@ REGIONS = {
 # 법정동코드 API는 지금 이름으로 찾는다
 NEW_NAMES = {'전라북도': '전북특별자치도', '강원도': '강원특별자치도'}
 SINCE, UNTIL = '2023-01-01', '2025-06-30'
+AUTO_LAG_DAYS, AUTO_SPAN_DAYS = 585, 912  # 자동 점검 창(판정 규칙은 backtest.py 머리)
+
+
+def auto_window(today):
+    until = today - dt.timedelta(days=AUTO_LAG_DAYS)
+    return (until - dt.timedelta(days=AUTO_SPAN_DAYS)).isoformat(), until.isoformat()
 
 
 def months_around(day, before=12, after=18):
@@ -31,14 +39,17 @@ def months_around(day, before=12, after=18):
     return [f'{k // 12}{k % 12 + 1:02d}' for k in range(base - before, base + after + 1)]
 
 
-def main(out, region='영남'):
+def main(out, region='영남', window=None):
     out, sidos = Path(out), REGIONS[region]
     today = presale.today_kst()
-    path = out / 'notices.json'
-    if path.exists():
+    since, until = auto_window(today) if window == 'auto' else (SINCE, UNTIL)
+    path, mark = out / 'notices.json', out / 'window.txt'
+    # 창 기록이 없는 옛 폴더(1 ~ 3회차 캐시)는 기본 창으로 본다
+    old = mark.read_text(encoding='utf-8').strip() if mark.exists() else f'{SINCE} {UNTIL}'
+    if path.exists() and old == f'{since} {until}':
         notices = json.loads(path.read_text(encoding='utf-8'))
     else:
-        rows = presale.applyhome('getAPTLttotPblancDetail', {'cond[RCRIT_PBLANC_DE::GTE]': SINCE, 'cond[RCRIT_PBLANC_DE::LTE]': UNTIL})
+        rows = presale.applyhome('getAPTLttotPblancDetail', {'cond[RCRIT_PBLANC_DE::GTE]': since, 'cond[RCRIT_PBLANC_DE::LTE]': until})
         notices = []
         for p in rows:
             sido, sgg, umd = presale.split_address(p.get('HSSPLY_ADRES', ''), p.get('SUBSCRPT_AREA_CODE_NM', ''))
@@ -59,9 +70,10 @@ def main(out, region='영남'):
                 print(f"{n['detail'].get('HOUSE_NM')}: 시·군·구 코드 실패 {ex}")
     out.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(notices, ensure_ascii=False, indent=1), encoding='utf-8')
+    mark.write_text(f'{since} {until}\n', encoding='utf-8')
     need = sorted({(n['code'], ym) for n in notices if n['code'] for ym in months_around(n['detail']['RCRIT_PBLANC_DE'])
                    if ym <= f'{today.year}{today.month:02d}'})
-    print(f'공고 {len(notices)}건(코드 실패 {failed}), 받을 시·군·구-월 {len(need)}개')
+    print(f'공고 {len(notices)}건({since} ~ {until}, 코드 실패 {failed}), 받을 시·군·구-월 {len(need)}개')
     done = 0
     for code, ym in need:
         f = out / 'trades' / code / f'{ym}.json'

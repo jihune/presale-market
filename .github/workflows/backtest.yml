@@ -1,12 +1,17 @@
 name: 시세 계산 백테스트
 
-# 손으로만 돌린다. 판정 규칙은 01_code/backtest.py 머리에 있고, 결과는 03_notes/backtest/(검증 묶음은 03_notes/backtest/holdout/)에 커밋한다.
-# 3회차부터 영남 실행이 검증 묶음 자료도 읽어 판정한다(검증 실행은 자료만 받는다).
+# 판정 규칙은 01_code/backtest.py 머리에 있다.
+# - 손으로(region 영남·검증): 1 ~ 3회차. 결과는 03_notes/backtest/(검증 묶음은 holdout/). 영남 실행이 검증 묶음 자료도 읽어 판정한다.
+# - 자동 점검(매달 20일 21:23 UTC = 21일 06:23 KST, 또는 손으로 region 「자동」): 마지막 자동 점검이 170일 넘었으면
+#   영남·검증 창 자료를 차례로 받고(작업마다 2시간쯤) 계수를 다시 맞춰 판정한 뒤 03_notes/backtest/result.json을 고친다.
+#   아니면 due 작업만 돌고 끝난다. 실패하면 기록이 남지 않아 다음 달에 다시 돈다.
 on:
+  schedule:
+    - cron: '23 21 20 * *'
   workflow_dispatch:
     inputs:
       region:
-        description: '영남(1 ~ 3회차 대상) 또는 검증(3회차 새 검증 묶음: 충청·호남·강원·대전·세종·광주)'
+        description: '영남(1 ~ 3회차 대상), 검증(3회차 새 검증 묶음: 충청·호남·강원·대전·세종·광주) 또는 자동(자동 점검을 지금 돌림)'
         default: '영남'
       data_only:
         description: 'true면 자료만 받고 백테스트는 돌리지 않는다(검증 묶음 결과를 방법을 정하기 전에 보지 않으려고)'
@@ -19,10 +24,11 @@ permissions:
   contents: write
 
 concurrency:
-  group: backtest-${{ inputs.region }}
+  group: backtest-${{ inputs.region || '자동' }}
 
 jobs:
   backtest:
+    if: github.event_name == 'workflow_dispatch' && inputs.region != '자동'
     runs-on: ubuntu-latest
     timeout-minutes: 330
     env:
@@ -76,6 +82,105 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "data: $(date -u +%F) 백테스트 결과($REGION)"
+          for attempt in 1 2 3; do
+            git pull --no-rebase --no-edit origin main && git push origin HEAD:main && exit 0
+            sleep 5
+          done
+          exit 1
+
+  due:
+    if: github.event_name == 'schedule' || inputs.region == '자동'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.due.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - id: due
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then run=true; else run=$(python 01_code/backtest.py due 03_notes/backtest); fi
+          echo "자동 점검할 때: $run"
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
+  # 공공데이터포털에 요청을 몰아 보내지 않도록 두 묶음을 차례로 받는다(작업마다 6시간 한도라 나눈다)
+  fetch-yn:
+    needs: due
+    if: needs.due.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 영남 창 자료 받기
+        run: python 01_code/backtest_data.py auto_yn 영남 auto
+      - uses: actions/upload-artifact@v4
+        with:
+          name: auto-yn
+          path: auto_yn
+          retention-days: 3
+
+  fetch-ho:
+    needs: fetch-yn
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 검증 창 자료 받기
+        run: python 01_code/backtest_data.py auto_ho 검증 auto
+      - uses: actions/upload-artifact@v4
+        with:
+          name: auto-ho
+          path: auto_ho
+          retention-days: 3
+
+  judge:
+    needs: [fetch-yn, fetch-ho]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: auto-yn
+          path: auto_yn
+      - uses: actions/download-artifact@v4
+        with:
+          name: auto-ho
+          path: auto_ho
+      - name: 시험
+        run: python -m unittest discover -s 01_code
+      - name: 자동 점검
+        run: python 01_code/backtest.py auto auto_yn auto_ho 03_notes/backtest
+      - name: 결과를 main에 저장
+        run: |
+          git add 03_notes/backtest
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: $(date -u +%F) 시세 자동 점검"
           for attempt in 1 2 3; do
             git pull --no-rebase --no-edit origin main && git push origin HEAD:main && exit 0
             sleep 5

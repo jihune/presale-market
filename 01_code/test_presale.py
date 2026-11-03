@@ -100,8 +100,8 @@ GATEWAY_XML = ('<OpenAPI_ServiceResponse><cmmMsgHeader><errMsg>SERVICE ERROR</er
 class FakeCache:
     """TradeCache 대역: 어느 기간이든 같은 거래를 준다. method가 v0·v2c면 그 방법으로 낸다."""
 
-    def __init__(self, rows, method='v1'):
-        self.rows, self.codes, self.method = rows, {'시 구': '11111'}, method
+    def __init__(self, rows, method='v1', coef=None):
+        self.rows, self.codes, self.method, self.coef = rows, {'시 구': '11111'}, method, coef
 
     def pool(self, sido, sgg, months, skip=0, kind='trade'):
         return self.rows, f'{sido} {sgg}'
@@ -144,6 +144,10 @@ class MarketOutput(unittest.TestCase):
         self.assertGreater(c['range'][1], c['market'])
         v0 = presale.market_types(NEW, NEW_MODELS, '시', '구', '가동', dt.date(2026, 11, 3), FakeCache(self.rows(), method='v0'), [])[0]['cmp']
         self.assertEqual((v0['method'], round(v0['per'], 6)), ('v0', round(p * math.exp(0.0131), 6)))
+        # 자동 점검이 적은 계수가 있으면 그것으로 낸다
+        k = {**presale.v2.V2C, 'a0': 0.05}
+        v0k = presale.market_types(NEW, NEW_MODELS, '시', '구', '가동', dt.date(2026, 11, 3), FakeCache(self.rows(), 'v0', k), [])[0]['cmp']
+        self.assertEqual(round(v0k['per'], 6), round(p * math.exp(0.05), 6))
 
     def test_adopted_method_reads_both_result_shapes(self):
         with tempfile.TemporaryDirectory() as d:
@@ -157,7 +161,17 @@ class MarketOutput(unittest.TestCase):
                 out = presale.Path(d, 'latest.json')
                 presale.write(out, [], dt.date(2026, 11, 3), [])
                 doc = presale.json.loads(out.read_text(encoding='utf-8'))
-                self.assertEqual((doc['schema'], doc['market_error']['method'], doc['market_method']), (2, 'v2c', presale.v2.METHOD_C))
+                self.assertEqual((doc['schema'], doc['market_error']['method']), (2, 'v2c'))
+                self.assertIn('0.0287 + 0.098 ×', doc['market_method'])
+                self.assertIn('2023-01-01 ~ 2025-06-30', doc['market_method'])
+                # 자동 점검이 적은 계수와 창이 market_method에 나온다
+                path.write_text('{"adopted": {"method": "v2c", "MdAPE": 0.03, "P80": 0.05, "N": 60, "checked": "2027-05-21", '
+                                '"coef": {"a": 0.01, "b": 0.2, "a0": -0.02}, "fit_window": ["2024-01-01", "2026-06-30"]}}', encoding='utf-8')
+                presale.write(out, [], dt.date(2027, 5, 21), [])
+                doc = presale.json.loads(out.read_text(encoding='utf-8'))
+                self.assertIn('0.01 + 0.2 ×', doc['market_method'])
+                self.assertIn('2024-01-01 ~ 2026-06-30', doc['market_method'])
+                self.assertEqual(doc['market_error']['checked'], '2027-05-21')
 
 
 class Retry(unittest.TestCase):

@@ -16,14 +16,14 @@
 |---|---|
 | `01_code/presale.py` | 공고 모으기, 공고문 읽기, 실거래 받기, 시세 계산, `collect`·`check`·`trades` 명령 |
 | `01_code/v2.py`, `fit_v2c.py` | 시세 v2c(분양가 × 예상 웃돈)와 그 계수 맞추기 |
-| `01_code/backtest.py`, `backtest_data.py` | 시세 백테스트(판정 규칙은 `backtest.py` 머리)와 지난 공고·실거래 받기 |
-| `01_code/test_presale.py` | 시험(`test_v2.py`도). `python -m unittest discover -s 01_code` |
+| `01_code/backtest.py`, `backtest_data.py` | 시세 백테스트와 반년마다 도는 자동 점검(판정 규칙은 `backtest.py` 머리), 지난 공고·실거래 받기 |
+| `01_code/test_presale.py` | 시험(`test_v2.py`, `test_backtest.py`도). `python -m unittest discover -s 01_code` |
 | `02_data/latest.json` | 매일 결과(Actions가 커밋) |
 | `02_data/check.json` | 손으로 돌린 지난 공고 결과 |
 | `02_data/notices/` | 공고마다 공고문에서 읽은 조건(다시 받지 않으려고 남김) |
 | `03_notes/` | 시세 계산 설계, 백테스트 판정 규칙과 결과 |
 | `.github/workflows/collect.yml` | 매일 모으기 |
-| `.github/workflows/backtest.yml` | 시세 백테스트(손으로 돌림). 결과는 `03_notes/backtest/`(검증 묶음은 `holdout/`) |
+| `.github/workflows/backtest.yml` | 시세 백테스트(손으로 돌림)와 자동 점검(매달 20일에 깨어 170일마다 돎). 결과는 `03_notes/backtest/`(검증 묶음은 `holdout/`, 자동 점검은 `auto/<날짜>/`와 `result.json`) |
 | `.github/workflows/merge-session-branches.yml` | 세션 브랜치(`claude/…`, `ccr-…`)를 main에 합침 |
 
 ## 3. 작업 방식

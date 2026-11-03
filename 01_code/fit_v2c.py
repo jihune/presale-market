@@ -2,7 +2,8 @@
 y = log(정답 ㎡당 ÷ 분양가 ㎡당)을 만들고, 절대 오차 합이 가장 작은 직선 y = a + b x(중앙값 회귀)와
 x 없이 쓰는 a0(y의 중간값), 남는 차이의 20·80% 분위를 낸다. 같은 단지 거래로 낸 v1(조합원 취소분·무순위)은 v1을 그대로 쓰므로 뺀다.
 
-사용: python 01_code/fit_v2c.py <자료 폴더>   결과를 표준 출력에 JSON으로 낸다(v2.py의 V2C에 옮겨 적는다).
+사용: python 01_code/fit_v2c.py <자료 폴더>   결과를 표준 출력에 JSON으로 낸다(3회차는 v2.py의 V2C에 옮겨 적었다).
+자동 점검(backtest.py auto)은 fit()을 불러 영남 창 자료로 새 계수를 맞춘다.
 """
 
 import json
@@ -50,9 +51,12 @@ def lad(xs, ys):
     return best[1], best[2]
 
 
-def main(data):
+def fit(data):
+    """계수 dict(points, with_v1, a, b, q20, q80, a0, q20_0, q80_0). 주변 시세가 있는 주택형이 없으면 None(자동 점검도 쓴다)."""
     pts = points(Path(data))
     with_x = [(x, y) for x, y in pts if x is not None]
+    if not with_x:
+        return None
     a, b = lad([x for x, _ in with_x], [y for _, y in with_x])
     res = sorted(y - a - b * x for x, y in with_x)
     a0 = statistics.median(y for _, y in pts)
@@ -60,10 +64,10 @@ def main(data):
 
     def q(s, p):
         return s[min(len(s) - 1, int(p * len(s)))]
-    print(json.dumps({'points': len(pts), 'with_v1': len(with_x), 'a': round(a, 4), 'b': round(b, 3),
-                      'q20': round(q(res, 0.2), 4), 'q80': round(q(res, 0.8), 4),
-                      'a0': round(a0, 4), 'q20_0': round(q(res0, 0.2), 4), 'q80_0': round(q(res0, 0.8), 4)}, ensure_ascii=False))
+    return {'points': len(pts), 'with_v1': len(with_x), 'a': round(a, 4), 'b': round(b, 3),
+            'q20': round(q(res, 0.2), 4), 'q80': round(q(res, 0.8), 4),
+            'a0': round(a0, 4), 'q20_0': round(q(res0, 0.2), 4), 'q80_0': round(q(res0, 0.8), 4)}
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    print(json.dumps(fit(sys.argv[1]), ensure_ascii=False))

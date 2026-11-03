@@ -50,8 +50,31 @@
   R3: 채택한 방법의 검증 묶음 P80을 alert_min_gap_ratio로, MdAPE·N과 함께 adopted에 적는다(알림 쪽은 시세 × (1 − P80)).
 - 출력: <출력 폴더>(영남)와 <출력 폴더>/holdout(검증)에 방법마다 <방법>-errors.tsv, <출력 폴더>/result.json에 두 묶음 지표와 판정. 마지막 줄 `VERDICT ...`.
 
-사용: python 01_code/backtest.py <영남 자료 폴더> <출력 폴더> [검증 자료 폴더]
-  3회차 코드다. 1회차(v2a)·2회차(v2b)를 다시 재려면 그 회차 커밋(bf6f06b, 218531e)의 이 파일을 쓴다.
+판정 규칙 자동 점검 (2026-11-03, 이 규칙과 코드를 커밋한 뒤 첫 실행을 돌린다)
+- 까닭: v2c 계수는 2023 ~ 2025 공고로 맞췄고, 사람이 때맞춰 다시 맞추지 않는다고 본다. 그래서 워크플로가 3회차와 같은 절차를
+  새 자료로 되풀이하고, 아래 규칙대로 계수·방법·오차를 스스로 바꾼다. 사람은 결과를 보지 않아도 된다.
+- 언제: backtest.yml이 매달 20일에 깨어, result.json의 마지막 자동 점검(auto_runs 끝)이 AUTO_EVERY_DAYS(170일) 전보다 오래됐거나
+  없으면 돈다(반년에 한 번꼴. 실패해 기록이 안 남으면 다음 달에 다시 돈다). 손으로 돌리면(region 「자동」) 날짜와 상관없이 돈다.
+- 창: 자료를 받는 날(KST) D에서 UNTIL = D − 585일(정답 창 540일 + 실거래 신고 기한 30일 + 여유 15일), SINCE = UNTIL − 912일
+  (1 ~ 3회차와 같은 30개월쯤). 받는 시·도는 backtest_data.py의 영남·검증 묶음 그대로다.
+- 대상·정답·예측 자료(공고일 전 거래만)·오차·지표: 1회차와 같다.
+- 계수: 지금 계수 = result.json adopted.coef(없으면 v2.py V2C). 새 계수 = 영남 창 자료에 fit_v2c.py와 같은 맞추기. 맞출 주택형이
+  FIT_MIN(30)개 미만이면 새 계수는 없다.
+- 잰다(검증 창): v1, 지금 계수의 v0·v2c, 새 계수의 v0_new·v2c_new.
+- 판정(검증 창에서, 순서대로):
+  A1 자료: 정답이 있는 공고가 AUTO_MIN_N(30)건 미만이면 TOO_FEW. 바꾸지 않는다.
+  A2 지표 대조: 잰 방법 모두 심은 결함 대조(2회차와 같음)가 살아 있어야 한다. 아니면 CONTROL_FAIL. 바꾸지 않는다.
+  A3 계수: v2c_new MdAPE < v2c MdAPE이면 NEW_COEF(새 계수), 아니면 KEEP_COEF(지금 계수).
+  A4 방법: 고른 계수의 v0·v2c로 3회차 R2c-1·R2c-2를 그대로 적용해 ADOPT_V2C, ADOPT_V0 또는 KEEP_V1.
+  A5 오차: 채택한 방법의 검증 창 MdAPE·P80·N과 점검일(checked), 창, 계수(v1이면 없음)를 adopted에, P80을 alert_min_gap_ratio에 적는다.
+  TOO_FEW·CONTROL_FAIL이면 adopted를 그대로 두고 auto_runs에만 적는다. 그러면 adopted.checked가 오래돼 알림 요약이 경고한다.
+- 출력: 03_notes/backtest/auto/<D>/에 방법마다 <방법>-errors.tsv와 result.json, 03_notes/backtest/result.json의 adopted·
+  alert_min_gap_ratio 갱신과 auto_runs 한 항목. 마지막 줄 `VERDICT ...`.
+
+사용: python 01_code/backtest.py <영남 자료 폴더> <출력 폴더> [검증 자료 폴더]   (3회차)
+      python 01_code/backtest.py auto <영남 창 자료> <검증 창 자료> <결과 폴더 03_notes/backtest>   (자동 점검)
+      python 01_code/backtest.py due <결과 폴더>   (자동 점검할 때면 true, 아니면 false)
+  1회차(v2a)·2회차(v2b)를 다시 재려면 그 회차 커밋(bf6f06b, 218531e)의 이 파일을 쓴다.
 """
 
 import datetime as dt
@@ -68,6 +91,7 @@ SEED = 20261103
 SHUFFLES = 200
 P80_V1_OK = 0.025
 V2_MARGIN, COVERAGE_SLACK = 0.02, 0.10
+AUTO_EVERY_DAYS, AUTO_MIN_N, FIT_MIN = 170, 30, 30
 
 
 def load_rows(data, code, months):
@@ -178,12 +202,12 @@ def write_tsv(path, rows):
     path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
-def v2c_of(n, area, price, data, slope=True):
-    """v2c(slope=True)·v0 예측(㎡당과 범위). 같은 단지 거래로 낸 v1이 있으면 그것을 쓴다."""
+def v2c_of(n, area, price, data, slope=True, k=None):
+    """v2c(slope=True)·v0 예측(㎡당과 범위). 같은 단지 거래로 낸 v1이 있으면 그것을 쓴다. k: 계수(없으면 v2.V2C)."""
     one = v1_of(n, area, price, data)
     if one and one.get('tier') == 0:
         return {'per': one['per'], 'fallback': True}
-    c = v2.estimate_c(one, area, price, slope=slope)
+    c = v2.estimate_c(one, area, price, slope=slope, k=k)
     return {'per': c['per'], 'lo': c['range'][0] / area, 'hi': c['range'][1] / area}
 
 
@@ -200,13 +224,15 @@ def measure(rows):
     return m
 
 
-def evaluate(notices, data, out):
-    """한 묶음에서 v1·v0·v2c를 재고 방법마다 TSV를 쓴다."""
+def evaluate(notices, data, out, coefs=None):
+    """한 묶음에서 v1과, 계수마다 v0·v2c를 재고 방법마다 TSV를 쓴다. coefs: {방법 이름 뒤에 붙일 말: 계수}(기본은 v2.V2C 하나)."""
     out.mkdir(parents=True, exist_ok=True)
+    plans = [('v1', lambda n, area, price: v1_of(n, area, price, data))]
+    for tail, k in (coefs or {'': None}).items():
+        plans += [(f'v0{tail}', lambda n, area, price, k=k: v2c_of(n, area, price, data, slope=False, k=k)),
+                  (f'v2c{tail}', lambda n, area, price, k=k: v2c_of(n, area, price, data, k=k))]
     got = {}
-    for name, predict in (('v1', lambda n, area, price: v1_of(n, area, price, data)),
-                          ('v0', lambda n, area, price: v2c_of(n, area, price, data, slope=False)),
-                          ('v2c', lambda n, area, price: v2c_of(n, area, price, data))):
+    for name, predict in plans:
         rows = notice_rows(notices, data, predict)
         write_tsv(out / f'{name}-errors.tsv', rows)
         m = measure(rows)
@@ -242,5 +268,70 @@ def main(data, out, holdout=None):
     print('VERDICT ' + ' '.join(verdict))
 
 
+def decide(h, new_k):
+    """자동 점검 판정 A1 ~ A4(머리의 규칙). h: 검증 창 지표(v1, v0, v2c, 새 계수가 있으면 v0_new, v2c_new).
+    (판정 낱말 목록, 바꿀 adopted 또는 None, 새 계수를 골랐는지)."""
+    if h['v1']['N'] < AUTO_MIN_N:
+        return ['TOO_FEW'], None, False
+    if not all(m['defect_alive'] for m in h.values()):
+        return ['CONTROL_FAIL'], None, False
+    new = bool(new_k) and h['v2c_new']['MdAPE'] < h['v2c']['MdAPE']
+    tail = '_new' if new else ''
+    verdict = ['NEW_COEF' if new else 'KEEP_COEF']
+    best = 'v2c' if h['v2c' + tail]['MdAPE'] < h['v0' + tail]['MdAPE'] else 'v0'
+    b, one = h[best + tail], h['v1']
+    adopt = (b['MdAPE'] <= one['MdAPE'] - V2_MARGIN and b['coverage'] >= one['coverage'] - COVERAGE_SLACK
+             and b['shuffle_share'] <= 0.05 and b['defect_alive'])
+    verdict.append(f'ADOPT_{best.upper()}' if adopt else 'KEEP_V1')
+    m = b if adopt else one
+    return verdict, {'method': best if adopt else 'v1', 'MdAPE': m['MdAPE'], 'P80': m['P80'], 'N': m['N'], 'set': '검증'}, new
+
+
+def auto(yn, ho, out):
+    """자동 점검: 영남 창(yn)으로 새 계수를 맞추고 검증 창(ho)에서 판정해 out/result.json을 고친다."""
+    import fit_v2c  # fit_v2c가 이 파일을 불러 쓰므로 여기서 부른다
+
+    yn, ho, out = Path(yn), Path(ho), Path(out)
+    today = presale.today_kst().isoformat()
+    res = json.loads((out / 'result.json').read_text(encoding='utf-8'))
+    cur = res.get('adopted') or {}
+    cur_k = cur.get('coef') or v2.V2C
+    fitted = fit_v2c.fit(yn)
+    new_k = {key: fitted[key] for key in v2.V2C} if fitted and fitted['with_v1'] >= FIT_MIN else None
+    window = (ho / 'window.txt').read_text(encoding='utf-8').split()
+    fit_window = (yn / 'window.txt').read_text(encoding='utf-8').split()
+    run = out / 'auto' / today
+    coefs = {'': cur_k, **({'_new': new_k} if new_k else {})}
+    h = evaluate(json.loads((ho / 'notices.json').read_text(encoding='utf-8')), ho, run, coefs)
+    verdict, adopted, new = decide(h, new_k)
+    if adopted:
+        adopted.update(checked=today, window=window)
+        if adopted['method'] != 'v1':
+            adopted.update(coef=new_k if new else cur_k,
+                           fit_window=fit_window if new else cur.get('fit_window') or list(v2.V2C_WINDOW))
+        res['adopted'], res['alert_min_gap_ratio'] = adopted, adopted['P80']
+    (run / 'result.json').write_text(json.dumps({'date': today, 'window': window, 'fit_window': fit_window, 'fit': fitted,
+                                                 'coef_now': cur_k, 'coef_new': new_k, 'holdout': h, 'verdict': verdict,
+                                                 'adopted': adopted}, ensure_ascii=False, indent=1), encoding='utf-8')
+    res.setdefault('auto_runs', []).append({'date': today, 'window': window, 'verdict': verdict,
+                                            'adopted': adopted and {k: adopted[k] for k in ('method', 'MdAPE', 'P80', 'N')}})
+    (out / 'result.json').write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding='utf-8')
+    for name, m in h.items():
+        print('holdout', name, json.dumps(m, ensure_ascii=False))
+    print('VERDICT ' + ' '.join(verdict))
+
+
+def due(out, today=None):
+    """마지막 자동 점검(auto_runs 끝)이 AUTO_EVERY_DAYS일 전보다 오래됐거나 없으면 True."""
+    today = today or presale.today_kst()
+    runs = json.loads((Path(out) / 'result.json').read_text(encoding='utf-8')).get('auto_runs') or []
+    return not runs or (today - dt.date.fromisoformat(runs[-1]['date'])).days >= AUTO_EVERY_DAYS
+
+
 if __name__ == '__main__':
-    main(*sys.argv[1:])
+    if sys.argv[1] == 'auto':
+        auto(*sys.argv[2:])
+    elif sys.argv[1] == 'due':
+        print('true' if due(sys.argv[2]) else 'false')
+    else:
+        main(*sys.argv[1:])

@@ -460,9 +460,9 @@ def jeonse(area, pool, umd, this_year):
 
 
 class TradeCache:
-    def __init__(self, today, method='v1'):
-        """method가 v0·v2c면 시세를 분양가 × 예상 웃돈으로 낸다(백테스트가 채택한 방법을 collect가 준다)."""
-        self.today, self.codes, self.months, self.method = today, {}, {}, method
+    def __init__(self, today, method='v1', coef=None):
+        """method가 v0·v2c면 시세를 분양가 × 예상 웃돈으로 낸다(백테스트가 채택한 방법과 계수 coef를 collect가 준다)."""
+        self.today, self.codes, self.months, self.method, self.coef = today, {}, {}, method, coef
 
     def pool(self, sido, sgg, months, skip=0, kind='trade'):
         """최근 months개월(skip개월 앞부터) 실거래. kind='trade'는 매매와 분양권, 'rent'는 전월세."""
@@ -493,7 +493,8 @@ class TradeCache:
 
 
 def adopted_method():
-    """백테스트(03_notes/backtest/result.json)가 채택한 시세 방법과 그 오차 {'method', 'MdAPE', 'P80', 'N'}(3회차부터 검증 묶음 값)."""
+    """백테스트(03_notes/backtest/result.json)가 채택한 시세 방법과 그 오차 {'method', 'MdAPE', 'P80', 'N', ...}(3회차부터 검증 묶음 값).
+    자동 점검이 적은 것이면 점검일 checked, 창 window, 계수 coef, 맞춘 창 fit_window도 있다."""
     res = json.loads(BACKTEST.read_text(encoding='utf-8'))
     return res.get('adopted') or {'method': 'v1', **{k: res['v1'][k] for k in ('MdAPE', 'P80', 'N')}}
 
@@ -555,7 +556,7 @@ def market_types(p, models, sido, sgg, umd, today, cache, notes):
             c['trend'] = c['per'] / old['per'] - 1 if old else None
             t['cmp'] = c = with_view(c, t['area'])
         if cache.method in ('v0', 'v2c'):
-            b = v2.estimate_c(c, t['area'], t['price'], slope=cache.method == 'v2c')
+            b = v2.estimate_c(c, t['area'], t['price'], slope=cache.method == 'v2c', k=cache.coef)
             if v2.pick(c, b) is b:
                 t['cmp'] = {**b, 'trend': c['trend'] if c else None}
     return types
@@ -605,7 +606,7 @@ def write(path, notices, today, errors, error=None):
     error = error or adopted_method()
     doc = {'schema': 2, 'generated_at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
            'today': today.isoformat(), 'lookback_days': LOOKBACK_DAYS,
-           'market_method': {'v2c': v2.METHOD_C, 'v0': v2.METHOD_0}.get(error['method'], MARKET_METHOD),
+           'market_method': v2.method_text(error) or MARKET_METHOD,
            'market_error': error,
            'notices': notices, 'errors': errors}
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -614,7 +615,7 @@ def write(path, notices, today, errors, error=None):
 
 def collect(found, today, path):
     error = adopted_method()
-    cache = TradeCache(today, method=error['method'] if error['method'] in ('v0', 'v2c') else 'v1')
+    cache = TradeCache(today, method=error['method'] if error['method'] in ('v0', 'v2c') else 'v1', coef=error.get('coef'))
     notices, errors = [], []
     for p, kind, mdl in found:
         try:
