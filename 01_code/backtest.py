@@ -53,8 +53,11 @@
 판정 규칙 자동 점검 (2026-11-03, 이 규칙과 코드를 커밋한 뒤 첫 실행을 돌린다)
 - 까닭: v2c 계수는 2023 ~ 2025 공고로 맞췄고, 사람이 때맞춰 다시 맞추지 않는다고 본다. 그래서 워크플로가 3회차와 같은 절차를
   새 자료로 되풀이하고, 아래 규칙대로 계수·방법·오차를 스스로 바꾼다. 사람은 결과를 보지 않아도 된다.
-- 언제: backtest.yml이 매달 20일에 깨어, result.json의 마지막 자동 점검(auto_runs 끝)이 AUTO_EVERY_DAYS(170일) 전보다 오래됐거나
-  없으면 돈다(반년에 한 번꼴. 실패해 기록이 안 남으면 다음 달에 다시 돈다). 손으로 돌리면(region 「자동」) 날짜와 상관없이 돈다.
+- 언제: backtest.yml이 매달 20일에 깨어, result.json의 마지막으로 값을 정한 자동 점검(auto_runs 가운데 adopted가 있는 것)이
+  AUTO_EVERY_DAYS(170일) 전보다 오래됐거나 없으면 돈다(반년에 한 번꼴). 실패하거나 TOO_FEW·CONTROL_FAIL로 끝나면 다음 달에 다시 돈다.
+  손으로 돌리면(region 「자동」) 날짜와 상관없이 돈다.
+  (2026-11-04 고침: 첫 실행 run 41659666772에서 청약홈 API가 빈 답(totalCount 0)을 줘 공고 0건으로 TOO_FEW가 적혔다. 그래서 값을 정하지
+  못한 실행은 세지 않게 했고, backtest_data.py는 공고 목록이 0건이면 실패로 멈춘다. 그 실행 기록은 지웠다.)
 - 창: 자료를 받는 날(KST) D에서 UNTIL = D − 585일(정답 창 540일 + 실거래 신고 기한 30일 + 여유 15일), SINCE = UNTIL − 912일
   (1 ~ 3회차와 같은 30개월쯤). 받는 시·도는 backtest_data.py의 영남·검증 묶음 그대로다.
 - 대상·정답·예측 자료(공고일 전 거래만)·오차·지표: 1회차와 같다.
@@ -322,9 +325,9 @@ def auto(yn, ho, out):
 
 
 def due(out, today=None):
-    """마지막 자동 점검(auto_runs 끝)이 AUTO_EVERY_DAYS일 전보다 오래됐거나 없으면 True."""
+    """값을 정한 마지막 자동 점검(auto_runs 가운데 adopted가 있는 것)이 AUTO_EVERY_DAYS일 전보다 오래됐거나 없으면 True."""
     today = today or presale.today_kst()
-    runs = json.loads((Path(out) / 'result.json').read_text(encoding='utf-8')).get('auto_runs') or []
+    runs = [r for r in json.loads((Path(out) / 'result.json').read_text(encoding='utf-8')).get('auto_runs') or [] if r.get('adopted')]
     return not runs or (today - dt.date.fromisoformat(runs[-1]['date'])).days >= AUTO_EVERY_DAYS
 
 

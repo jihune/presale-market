@@ -5,6 +5,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import backtest
 import backtest_data
@@ -45,9 +46,16 @@ class When(unittest.TestCase):
             path = Path(d, 'result.json')
             path.write_text('{"adopted": {"method": "v2c"}}', encoding='utf-8')
             self.assertTrue(backtest.due(d, dt.date(2026, 11, 20)))
-            path.write_text(json.dumps({'auto_runs': [{'date': '2026-11-04'}]}), encoding='utf-8')
-            self.assertFalse(backtest.due(d, dt.date(2027, 4, 22)))  # 169일
-            self.assertTrue(backtest.due(d, dt.date(2027, 4, 23)))  # 170일
+            runs = [{'date': '2026-11-04', 'adopted': {'method': 'v2c'}}, {'date': '2027-01-20', 'adopted': None}]
+            path.write_text(json.dumps({'auto_runs': runs}), encoding='utf-8')
+            self.assertFalse(backtest.due(d, dt.date(2027, 4, 22)))  # 값을 정한 점검에서 169일
+            self.assertTrue(backtest.due(d, dt.date(2027, 4, 23)))  # 170일. 값을 정하지 못한 01-20 실행은 세지 않는다
+
+    def test_empty_notice_list_stops(self):
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(backtest_data.presale, 'applyhome', return_value=[]):
+            with self.assertRaises(SystemExit):
+                backtest_data.main(d, '영남', 'auto')
+            self.assertFalse(Path(d, 'notices.json').exists())
 
     def test_auto_window_ends_585_days_back_and_spans_912(self):
         since, until = backtest_data.auto_window(dt.date(2027, 5, 21))

@@ -59,6 +59,9 @@ def main(out, region='영남', window=None):
             models = presale.applyhome('getAPTLttotPblancMdl', {'cond[HOUSE_MANAGE_NO::EQ]': p['HOUSE_MANAGE_NO'], 'cond[PBLANC_NO::EQ]': p['PBLANC_NO']})
             notices.append({'detail': {k: v for k, v in p.items() if k not in presale.DROP_FIELDS}, 'models': models,
                             'sido': sido, 'sigungu': sgg, 'umd': umd, 'code': None})
+        # 청약홈 API가 빈 답(totalCount 0)을 줄 때가 있다(2026-11-04 00:02 KST). 30개월에 공고가 없을 수는 없으니 멈추고 다음 실행에 다시 받는다
+        if not rows:
+            raise SystemExit(f'청약홈 공고 0건({since} ~ {until}): API가 빈 답을 줬다. 다음 실행에 다시 받는다')
     # 연결이 끊겨 시·군·구 코드를 못 받은 공고는 다음 실행이 다시 받는다
     failed = 0
     for n in notices:
