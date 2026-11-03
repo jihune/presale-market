@@ -1,6 +1,7 @@
 """공고문 읽기·주소·시세 비교 함수 시험. 실행: python -m unittest discover -s 01_code"""
 
 import datetime as dt
+import math
 import tempfile
 import unittest
 from unittest import mock
@@ -99,8 +100,8 @@ GATEWAY_XML = ('<OpenAPI_ServiceResponse><cmmMsgHeader><errMsg>SERVICE ERROR</er
 class FakeCache:
     """TradeCache 대역: 어느 기간이든 같은 거래를 준다. geocode를 주면 v2b를 낸다."""
 
-    def __init__(self, rows, geocode=None):
-        self.rows, self.geocode, self.codes = rows, geocode, {'시 구': '11111'}
+    def __init__(self, rows, geocode=None, method='v1'):
+        self.rows, self.geocode, self.codes, self.method = rows, geocode, {'시 구': '11111'}, method
         self.complexes = mock.Mock(lookup=mock.Mock(return_value=None))
 
     def pool(self, sido, sgg, months, skip=0, kind='trade'):
@@ -140,6 +141,20 @@ class MarketOutput(unittest.TestCase):
         self.assertEqual(c['v1']['scope'], '같은 시·군·구, 5년 이내 단지')
         self.assertTrue(c['comps'] and c['range'][0] <= c['market'] <= c['range'][1])
         cache.complexes.lookup.assert_called_with('11111', '단지10', '가동', '10', 2022)
+
+    def test_v2c_is_price_times_expected_premium(self):
+        # 주변 시세(v1)가 분양가 ㎡당 942.3의 1.07배쯤이면 x ≈ 0.07, 예상 웃돈 e^(0.0287 + 0.098 × x) − 1 ≈ +3.6%
+        types = presale.market_types(NEW, NEW_MODELS, '시', '구', '가동', dt.date(2026, 11, 3), FakeCache(self.rows(), method='v2c'), [])
+        c = types[0]['cmp']
+        p = 80000 / 84.9
+        x = c['gap']
+        self.assertAlmostEqual(x, max(-0.5, min(0.3, math.log(c['v1']['market'] / 84.9 / p))), places=2)
+        self.assertEqual(c['method'], 'v2c')
+        self.assertAlmostEqual(c['per'], p * math.exp(0.0287 + 0.098 * x), places=6)
+        self.assertLess(c['range'][0], c['market'])
+        self.assertGreater(c['range'][1], c['market'])
+        v0 = presale.market_types(NEW, NEW_MODELS, '시', '구', '가동', dt.date(2026, 11, 3), FakeCache(self.rows(), method='v0'), [])[0]['cmp']
+        self.assertEqual((v0['method'], round(v0['per'], 6)), ('v0', round(p * math.exp(0.0131), 6)))
 
     def test_adopted_method_reads_both_result_shapes(self):
         with tempfile.TemporaryDirectory() as d:

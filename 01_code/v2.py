@@ -210,6 +210,38 @@ def estimate(target, area, price, pool, year, prefix, geocode, lookup=None, umd=
                        'adj': round(c['adj'], 1)} for c in sorted(picked, key=lambda c: c['km'])]}
 
 
+GAP_RANGE = (-0.5, 0.3)  # x = log(주변 시세 ÷ 분양가)를 이 안에서 자른다
+
+
+def gap(per, p):
+    """주변 시세(v1 ㎡당) ÷ 분양가(㎡당)의 로그를 GAP_RANGE에서 자른 값. 주변 시세가 없으면 None."""
+    if not per:
+        return None
+    return max(GAP_RANGE[0], min(GAP_RANGE[1], math.log(per / p)))
+
+
+# v2c 계수: 01_code/fit_v2c.py를 영남 2023-01 ~ 2025-06 공고 백테스트 자료(주택형 348개, 2026-11-03)에 돌린 값. 3회차 판정은 검증 묶음에서 한다
+V2C = {'a': 0.0287, 'b': 0.098, 'q20': -0.075, 'q80': 0.0316, 'a0': 0.0131, 'q20_0': -0.0861, 'q80_0': 0.0301}
+METHOD_C = ('v2c: 분양가 × (1 + 예상 웃돈). 예상 웃돈의 로그 = 0.0287 + 0.098 × log(v1 주변 시세 ÷ 분양가, −0.5 ~ 0.3에서 자름)이고 '
+            '주변 시세가 없으면 0.0131. 계수는 영남 2023 ~ 2025 공고의 공고 뒤 6 ~ 18개월 분양권 거래로 맞췄다. 같은 단지 거래가 있으면 v1')
+METHOD_0 = ('v0: 분양가 × (1 + 예상 웃돈). 예상 웃돈의 로그 = 0.0131(주변 시세를 쓰지 않음). 계수는 영남 2023 ~ 2025 공고의 '
+            '공고 뒤 6 ~ 18개월 분양권 거래로 맞췄다. 같은 단지 거래가 있으면 v1')
+
+
+def estimate_c(v1, area, price, slope=True):
+    """v2c 예상 분양권 거래가. v1: 같은 공고 주택형의 v1 결과(없으면 None). slope=False면 v0(분양가 × 평균 웃돈, 주변 시세를 쓰지 않음)."""
+    p = price / area
+    x = gap(v1['per'] if v1 else None, p) if slope else None
+    k = V2C
+    lp, lo, hi = (k['a'] + k['b'] * x, k['q20'], k['q80']) if x is not None else (k['a0'], k['q20_0'], k['q80_0'])
+    per = p * math.exp(lp)
+    market = round(per * area)
+    return {'method': 'v2c' if slope else 'v0', 'per': per, 'market': market, 'gain': market - price, 'rate': (market - price) / price,
+            'scope': f'분양가 × 예상 웃돈 {math.exp(lp) - 1:+.1%}' + (f'(주변 시세 ÷ 분양가 {math.exp(x) - 1:+.0%})' if x is not None else '(주변 시세 없음)'),
+            'range': (round(per * math.exp(lo) * area), round(per * math.exp(hi) * area)), 'gap': x,
+            'v1': {key: v1[key] for key in ('scope', 'market', 'rate')} if v1 else None}
+
+
 def pick(v1, v2b):
     """같은 단지 거래로 낸 v1(조합원 취소분·무순위)이 가장 정확하다. 그다음 v2b, v2b가 없으면 v1."""
     if v1 and v1.get('tier') == 0:

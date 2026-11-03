@@ -565,10 +565,10 @@ def jeonse(area, pool, umd, this_year):
 
 
 class TradeCache:
-    def __init__(self, today, geocode=None, complexes=None):
-        """geocode·complexes를 주면 시세를 v2b로 낸다(백테스트가 v2b를 채택했을 때 collect가 준다)."""
+    def __init__(self, today, geocode=None, complexes=None, method='v1'):
+        """geocode·complexes를 주면 시세를 v2b로, method가 v0·v2c면 분양가 × 예상 웃돈으로 낸다(백테스트가 채택한 방법을 collect가 준다)."""
         self.today, self.codes, self.months = today, {}, {}
-        self.geocode, self.complexes = geocode, complexes
+        self.geocode, self.complexes, self.method = geocode, complexes, method
 
     def pool(self, sido, sgg, months, skip=0, kind='trade'):
         """최근 months개월(skip개월 앞부터) 실거래. kind='trade'는 매매와 분양권, 'rent'는 전월세."""
@@ -660,7 +660,11 @@ def market_types(p, models, sido, sgg, umd, today, cache, notes):
                 if c.get('months') == 6 and not c.get('borrowed') else None
             c['trend'] = c['per'] / old['per'] - 1 if old else None
             t['cmp'] = c = with_view(c, t['area'])
-        if cache.geocode:
+        if cache.method in ('v0', 'v2c'):
+            b = v2.estimate_c(c, t['area'], t['price'], slope=cache.method == 'v2c')
+            if v2.pick(c, b) is b:
+                t['cmp'] = {**b, 'trend': c['trend'] if c else None}
+        elif cache.geocode:
             year_pool = cache.pool(sido, sgg, 12)[0]
             b = v2.estimate(p.get('HSSPLY_ADRES', ''), t['area'], t['price'], year_pool, today.year, f'{sido} {sgg}'.strip(),
                             cache.geocode, lookup=lambda apt, u, jibun, built: cache.complexes.lookup(cache.codes[f'{sido} {sgg}'.strip()], apt, u, jibun, built),
@@ -714,7 +718,8 @@ def write(path, notices, today, errors, error=None):
     error = error or adopted_method()
     doc = {'schema': 2, 'generated_at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
            'today': today.isoformat(), 'lookback_days': LOOKBACK_DAYS,
-           'market_method': v2.METHOD if error['method'] == 'v2b' else MARKET_METHOD, 'market_error': error,
+           'market_method': {'v2b': v2.METHOD, 'v2c': v2.METHOD_C, 'v0': v2.METHOD_0}.get(error['method'], MARKET_METHOD),
+           'market_error': error,
            'notices': notices, 'errors': errors}
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding='utf-8')
@@ -723,7 +728,8 @@ def write(path, notices, today, errors, error=None):
 def collect(found, today, path):
     error = adopted_method()
     geocode = v2.Geocoder() if error['method'] == 'v2b' else None
-    cache = TradeCache(today, geocode if geocode and geocode.key else None, Complexes(today=today))
+    cache = TradeCache(today, geocode if geocode and geocode.key else None, Complexes(today=today),
+                       method=error['method'] if error['method'] in ('v0', 'v2c') else 'v1')
     if geocode and not geocode.key:
         print('KAKAO_REST_API_KEY 없음: 시세를 v1로 낸다')
     notices, errors = [], []

@@ -34,8 +34,24 @@
   K-apt 기본정보 호출 수와 세대수를 모르는 비교 단지 수, 회귀를 세운 주택형 수.
 - 출력: 1회차와 같은 파일에 v2b-errors.tsv를 더한다(v2-errors.tsv는 1회차 v2a 결과로 남긴다). 마지막 줄 `VERDICT ...`.
 
-사용: python 01_code/backtest.py <자료 폴더> <출력 폴더>
-  v2는 카카오 좌표가 필요해 환경 변수 KAKAO_REST_API_KEY가 있을 때만 잰다(Actions). v2도 v1과 같은 오차 정의(주택형마다)를 쓴다.
+판정 규칙 3회차 (2026-11-03, 검증 묶음 결과를 보기 전에 커밋한다. 2회차 결과 KEEP_V1 뒤 사용자가 3회차를 골랐다)
+- 까닭: 2회차 뒤 영남 자료를 세션이 직접 보니 정답(공고 뒤 분양권 거래가)이 분양가와 거의 같았고(분양가 ÷ 정답 − 1의 중간값 −1.0%),
+  주변 시세 ÷ 분양가는 실제 웃돈을 조금만 설명했다(공고 단위 기울기 0.055, 상관 0.14). 그래서 시세를 「분양가 × (1 + 예상 웃돈)」으로 낸다.
+- 방법: v1(그대로), v0(분양가 × e^a0, 주변 시세를 쓰지 않는 기준), v2c(분양가 × e^(a + b·x), x = log(v1 ÷ 분양가)를 −0.5 ~ 0.3에서 자름,
+  v1이 없으면 v0). v0·v2c도 같은 단지 거래로 낸 v1(조합원 취소분·무순위)이 있으면 그것을 쓴다. 계수는 fit_v2c.py로 영남 자료에서 맞춰
+  v2.py의 V2C에 고정했다(이 커밋). 영남은 계수를 맞춘 자료라 결과를 적기만 하고 판정에 쓰지 않는다.
+- 판정 묶음: 검증 묶음(backtest_data.py 「검증」: 대전·세종·충북·충남·광주·전남·전북·강원, 2023-01-01 ~ 2025-06-30 민영 분양).
+  대상·정답·예측 자료·오차·지표는 1회차와 같다.
+- 대조: 방법마다 섞기(1회차와 같음, 0.05 이하)와 심은 결함(2회차와 같음, ×1.10·×0.90 가운데 하나라도 MdAPE가 커짐). 모두 통과해야 CONTROL_OK.
+- 판정(검증 묶음에서):
+  R2c-1 후보 고르기: v2c MdAPE < v0 MdAPE이면 v2c, 아니면 v0(같으면 단순한 v0).
+  R2c-2 채택: 고른 후보의 MdAPE ≤ v1 MdAPE − 0.02, coverage ≥ v1 coverage − 0.10, 섞기 비율 ≤ 0.05, 심은 결함 대조 통과면 ADOPT_V2C 또는 ADOPT_V0,
+        아니면 KEEP_V1.
+  R3: 채택한 방법의 검증 묶음 P80을 alert_min_gap_ratio로, MdAPE·N과 함께 adopted에 적는다(알림 쪽은 시세 × (1 − P80)).
+- 출력: <출력 폴더>(영남)와 <출력 폴더>/holdout(검증)에 방법마다 <방법>-errors.tsv, <출력 폴더>/result.json에 두 묶음 지표와 판정. 마지막 줄 `VERDICT ...`.
+
+사용: python 01_code/backtest.py <영남 자료 폴더> <출력 폴더> [검증 자료 폴더]
+  3회차 코드다. 1회차(v2a)·2회차(v2b)를 다시 재려면 그 회차 커밋(bf6f06b, 218531e)의 이 파일을 쓴다.
 """
 
 import datetime as dt
@@ -162,22 +178,13 @@ def write_tsv(path, rows):
     path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
-def v2b_of(n, area, price, data, geocode, complexes):
-    """v2b 예측(㎡당). 같은 단지 거래로 낸 v1이 있으면 그것을, v2b가 값을 못 내면 v1을 쓴다(fallback)."""
-    d = dt.date.fromisoformat(n['detail']['RCRIT_PBLANC_DE'])
-    start = d - dt.timedelta(days=365)
-    pool = [t for t in load_rows(data, n['code'], months_between(start, d)) if start.isoformat() <= t['date'] < d.isoformat()]
-    p = n['detail']
-    got = v2.estimate(p.get('HSSPLY_ADRES', ''), area, price, pool, d.year, f"{n['sido']} {n['sigungu']}".strip(), geocode,
-                      lookup=lambda apt, umd, jibun, built: complexes.lookup(n['code'], apt, umd, jibun, built), umd=n['umd'],
-                      households=int(p.get('TOT_SUPLY_HSHLDCO') or 0), top=v2.is_top(p.get('HOUSE_NM'), p.get('CNSTRCT_ENTRPS_NM')))
+def v2c_of(n, area, price, data, slope=True):
+    """v2c(slope=True)·v0 예측(㎡당과 범위). 같은 단지 거래로 낸 v1이 있으면 그것을 쓴다."""
     one = v1_of(n, area, price, data)
-    c = v2.pick(one, got)
-    if not c:
-        return None
-    if c is got:
-        return {'per': c['per'], 'lo': c['range'][0] / area, 'hi': c['range'][1] / area, 'model': c['model']}
-    return {'per': c['per'], 'fallback': True}
+    if one and one.get('tier') == 0:
+        return {'per': one['per'], 'fallback': True}
+    c = v2.estimate_c(one, area, price, slope=slope)
+    return {'per': c['per'], 'lo': c['range'][0] / area, 'hi': c['range'][1] / area}
 
 
 def defect_mdape(rows, factor):
@@ -193,55 +200,45 @@ def measure(rows):
     return m
 
 
-def main(data, out):
-    data, out = Path(data), Path(out)
+def evaluate(notices, data, out):
+    """한 묶음에서 v1·v0·v2c를 재고 방법마다 TSV를 쓴다."""
     out.mkdir(parents=True, exist_ok=True)
-    notices = json.loads((data / 'notices.json').read_text(encoding='utf-8'))
-    result, verdict = {}, []
-    v1 = notice_rows(notices, data, lambda n, area, price: v1_of(n, area, price, data))
-    write_tsv(out / 'v1-errors.tsv', v1)
-    m1 = result['v1'] = measure(v1)
-    alive = [m1['defect_alive']]
-    if m1['shuffle_share'] > 0.05:
-        verdict.append('V1_NO_SIGNAL')
-    verdict.append('V1_GRADES_OK' if m1['P80'] <= P80_V1_OK else 'V1_GRADES_NOT_OK')
-    adopted = ('v1', m1)
-    geocode, complexes = v2.Geocoder(), presale.Complexes(today=presale.today_kst())
-    if geocode.key:
-        models = []
-
-        def predict(n, area, price):
-            got = v2b_of(n, area, price, data, geocode, complexes)
-            if got and 'model' in got:
-                models.append(got['model'])
-            return got
+    got = {}
+    for name, predict in (('v1', lambda n, area, price: v1_of(n, area, price, data)),
+                          ('v0', lambda n, area, price: v2c_of(n, area, price, data, slope=False)),
+                          ('v2c', lambda n, area, price: v2c_of(n, area, price, data))):
         rows = notice_rows(notices, data, predict)
-        write_tsv(out / 'v2b-errors.tsv', rows)
-        m2 = result['v2b'] = measure(rows)
-        alive.append(m2['defect_alive'])
+        write_tsv(out / f'{name}-errors.tsv', rows)
+        m = measure(rows)
         ranged = [r for r in rows if r['lo'] is not None]
-        m2.update({'fallback_types': sum(r['fallback'] for r in rows), 'fitted_types': len(models),
-                   'range_hit': sum(r['lo'] <= r['truth'] <= r['hi'] for r in ranged) / len(ranged) if ranged else None,
-                   'range_notices': len(ranged),
-                   'geocode_calls': geocode.calls, 'geocode_misses': geocode.misses, 'geocode_errors': geocode.errors,
-                   'kapt_calls': complexes.calls, 'kapt_errors': complexes.errors, 'kapt_stopped': complexes.stopped,
-                   'comps_hh_unknown': sum(mo['n'] - mo['hh_known'] for mo in models),
-                   'coef_median': {f: statistics.median(mo['coef'][f] for mo in models) for f in v2.FEATURES} if models else None})
-        no_signal = m2['shuffle_share'] is None or m2['shuffle_share'] > 0.05
-        if no_signal:
-            verdict.append('V2B_NO_SIGNAL')
-        adopt = not no_signal and m2['MdAPE'] <= m1['MdAPE'] - V2_MARGIN and m2['coverage'] >= m1['coverage'] - COVERAGE_SLACK
-        verdict.append('ADOPT_V2B' if adopt else 'KEEP_V1')
-        if adopt:
-            adopted = ('v2b', m2)
-    verdict.insert(0, 'CONTROL_OK' if all(alive) else 'CONTROL_FAIL')
-    result['adopted'] = {'method': adopted[0], 'MdAPE': adopted[1]['MdAPE'], 'P80': adopted[1]['P80'], 'N': adopted[1]['N']}
-    result['alert_min_gap_ratio'] = adopted[1]['P80']
+        m['range_hit'] = sum(r['lo'] <= r['truth'] <= r['hi'] for r in ranged) / len(ranged) if ranged else None
+        m['fallback_types'] = sum(r['fallback'] for r in rows)
+        got[name] = m
+    return got
+
+
+def main(data, out, holdout=None):
+    data, out = Path(data), Path(out)
+    result = {'yeongnam_fit': evaluate(json.loads((data / 'notices.json').read_text(encoding='utf-8')), data, out)}
+    verdict = []
+    if holdout:
+        holdout = Path(holdout)
+        h = result['holdout'] = evaluate(json.loads((holdout / 'notices.json').read_text(encoding='utf-8')), holdout, out / 'holdout')
+        alive = all(m['defect_alive'] and m['shuffle_share'] is not None and m['shuffle_share'] <= 0.05 for m in h.values())
+        verdict.append('CONTROL_OK' if alive else 'CONTROL_FAIL')
+        best = 'v2c' if h['v2c']['MdAPE'] < h['v0']['MdAPE'] else 'v0'
+        b, one = h[best], h['v1']
+        adopt = (b['MdAPE'] <= one['MdAPE'] - V2_MARGIN and b['coverage'] >= one['coverage'] - COVERAGE_SLACK
+                 and b['shuffle_share'] <= 0.05 and b['defect_alive'])
+        verdict.append(f'ADOPT_{best.upper()}' if adopt else 'KEEP_V1')
+        name = best if adopt else 'v1'
+        result['adopted'] = {'method': name, 'MdAPE': h[name]['MdAPE'], 'P80': h[name]['P80'], 'N': h[name]['N'], 'set': '검증'}
+        result['alert_min_gap_ratio'] = h[name]['P80']
     result['verdict'] = verdict
     (out / 'result.json').write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding='utf-8')
-    for name, m in result.items():
-        if isinstance(m, dict):
-            print(name, json.dumps(m, ensure_ascii=False))
+    for region in ('yeongnam_fit', 'holdout'):
+        for name, m in result.get(region, {}).items():
+            print(region, name, json.dumps(m, ensure_ascii=False))
     print('VERDICT ' + ' '.join(verdict))
 
 
