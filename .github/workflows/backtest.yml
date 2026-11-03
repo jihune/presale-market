@@ -11,6 +11,9 @@ on:
       data_only:
         description: 'true면 자료만 받고 백테스트는 돌리지 않는다(검증 묶음 결과를 방법을 정하기 전에 보지 않으려고)'
         default: 'false'
+      upload:
+        description: 'true면 받은 자료(공공데이터)를 아티팩트로 올린다(세션이 내려받아 방법을 고칠 때)'
+        default: 'false'
 
 permissions:
   contents: write
@@ -47,6 +50,13 @@ jobs:
         run: python -m unittest discover -s 01_code
       - name: 자료 받기
         run: python 01_code/backtest_data.py "$DIR" "$REGION"
+      - name: 자료 올리기
+        if: inputs.upload == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.KEY }}-data
+          path: ${{ env.DIR }}
+          retention-days: 3
       - name: 백테스트
         if: inputs.data_only != 'true'
         run: python 01_code/backtest.py "$DIR" "$OUT"
