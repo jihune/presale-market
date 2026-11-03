@@ -15,6 +15,7 @@ import html
 import http.client
 import json
 import os
+import random
 import re
 import shutil
 import statistics
@@ -73,33 +74,76 @@ def _key():
     return urllib.parse.unquote(key) if '%' in key else key
 
 
+# 공공데이터포털은 연결이 끊기거나(Connection reset, 시간초과), 5xx를 주거나, 200에 오류 XML·빈 본문을 주는 일이 잦다.
+# 포털 쪽 문제로 사례가 많아(2026-11-03 사용자 확인) 늘어나는 간격으로 여러 번 다시 받는다. 합쳐 6분쯤까지 기다린다.
+RETRY_WAITS = (5, 15, 45, 90, 180)
+RETRY_HTTP = {408, 429, 500, 502, 503, 504}
+# 다시 받아도 그날은 안 되는 포털 오류(키 미등록, 일일 한도 초과, 서비스 없음, 접근 거부). 나머지 오류는 다시 받는다
+PERMANENT = ('SERVICE_KEY_IS_NOT_REGISTERED', 'LIMITED_NUMBER_OF_SERVICE_REQUESTS', 'NO_OPENAPI_SERVICE',
+             'SERVICE_ACCESS_DENIED', 'DEADLINE_HAS_EXPIRED', 'UNREGISTERED_IP')
+
+
+class Transient(Exception):
+    """다시 받으면 될 수 있는 응답(오류 XML, 깨진 본문)."""
+
+
+def _pause(name, reason, wait):
+    print(f'{name}: {reason}, {wait}초 뒤 다시', flush=True)  # 주소에 인증키가 있어 주소는 찍지 않는다
+    time.sleep(wait + random.uniform(0, wait / 3))
+
+
 def _open(req, name):
-    # 해외 러너에서 data.go.kr TLS 연결이 가끔 시간초과로 끊긴다. 연결 실패만 두 번 더 시도한다.
-    for wait in (10, 30, None):
+    for wait in (*RETRY_WAITS, None):
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
                 return r.read()
         except urllib.error.HTTPError as e:
-            raise RuntimeError(f'{name}: HTTP {e.code} {e.read().decode("utf-8", "ignore")[:200]}') from None
+            body = e.read().decode('utf-8', 'ignore')[:200]
+            if e.code not in RETRY_HTTP or wait is None:
+                raise RuntimeError(f'{name}: HTTP {e.code} {body}') from None
+            reason = f'HTTP {e.code}'
         # 응답 없이 닫거나(RemoteDisconnected) RST로 끊으면(ConnectionResetError) URLError로 감싸지지 않는다
         except (OSError, http.client.HTTPException) as e:
             if wait is None:
                 raise RuntimeError(f'{name}: 연결 실패 {getattr(e, "reason", e)}') from None
-            time.sleep(wait)
+            reason = f'연결 실패 {getattr(e, "reason", e)}'
+        _pause(name, reason, wait)
 
 
-def _get(url, params, name):
+def _get(url, params, name, parse=None):
+    """요청하고 parse로 읽는다. parse가 Transient·ValueError·ParseError를 내면(오류 XML, 깨진 본문) 다시 받는다."""
     query = urllib.parse.urlencode({'serviceKey': _key(), **params})
-    body = _open(urllib.request.Request(f'{url}?{query}', headers={'User-Agent': 'presale-market'}), name).decode('utf-8')
-    time.sleep(1)  # 같은 사이트에 요청을 몰아 보내지 않는다
-    return body
+    req = urllib.request.Request(f'{url}?{query}', headers={'User-Agent': 'presale-market'})
+    for wait in (*RETRY_WAITS[:3], None):
+        body = _open(req, name).decode('utf-8', 'ignore')
+        time.sleep(1)  # 같은 사이트에 요청을 몰아 보내지 않는다
+        if parse is None:
+            return body
+        try:
+            return parse(body)
+        except (Transient, ValueError, ET.ParseError) as ex:
+            if wait is None:
+                raise RuntimeError(f'{name}: 응답 이상 {str(ex)[:200]}') from None
+            _pause(name, f'응답 이상 {str(ex)[:80]}', wait)
+
+
+def _rtms(body):
+    """실거래 API XML. 정상(resultCode 00·000)이면 root, 그날 안 되는 오류면 RuntimeError, 나머지 오류는 Transient."""
+    root = ET.fromstring(body)
+    code = root.findtext('.//resultCode') or root.findtext('.//returnReasonCode') or ''
+    if code in ('00', '000'):
+        return root
+    msg = ' '.join(x for x in (root.findtext('.//resultMsg'), root.findtext('.//errMsg'), root.findtext('.//returnAuthMsg')) if x)
+    if any(p in msg for p in PERMANENT):
+        raise RuntimeError(f'{code} {msg}')
+    raise Transient(f'{code} {msg}')
 
 
 def applyhome(op, cond=None, per_page=100):
     rows, page = [], 1
     while True:
         params = {'page': page, 'perPage': per_page, 'returnType': 'JSON', **(cond or {})}
-        data = json.loads(_get(APPLYHOME + op, params, op))
+        data = _get(APPLYHOME + op, params, op, parse=json.loads)
         rows += data.get('data') or []
         if page * per_page >= data.get('matchCount', 0):
             return rows
@@ -107,8 +151,8 @@ def applyhome(op, cond=None, per_page=100):
 
 
 def sigungu_code(name):
-    body = _get(REGION, {'type': 'json', 'pageNo': 1, 'numOfRows': 10, 'flag': 'Y', 'locatadd_nm': name}, 'StanReginCd')
-    data = json.loads(body).get('StanReginCd') or []
+    body = _get(REGION, {'type': 'json', 'pageNo': 1, 'numOfRows': 10, 'flag': 'Y', 'locatadd_nm': name}, 'StanReginCd', parse=json.loads)
+    data = body.get('StanReginCd') or []
     rows = [r for part in data for r in part.get('row', [])]
     exact = [r for r in rows if r.get('locatadd_nm') == name]
     return (exact or rows)[0]['region_cd'][:5] if rows else None
@@ -118,10 +162,10 @@ def _items(url, lawd_cd, yyyymm):
     """실거래 API 한 달치 item을 모두 받는다. 한 쪽 1,000건을 넘으면 다음 쪽을 받는다."""
     name, out, page = url.rsplit('/', 1)[1], [], 1
     while True:
-        root = ET.fromstring(_get(url, {'LAWD_CD': lawd_cd, 'DEAL_YMD': yyyymm, 'numOfRows': 1000, 'pageNo': page}, name))
-        code = root.findtext('.//resultCode') or ''
-        if code not in ('00', '000'):
-            raise RuntimeError(f'{name}: {code} {root.findtext(".//resultMsg")}')
+        try:
+            root = _get(url, {'LAWD_CD': lawd_cd, 'DEAL_YMD': yyyymm, 'numOfRows': 1000, 'pageNo': page}, name, parse=_rtms)
+        except RuntimeError as ex:
+            raise RuntimeError(f'{name}: {ex}') from None
         items = list(root.iter('item'))
         out += items
         if not items or page * 1000 >= int(root.findtext('.//totalCount') or 0):

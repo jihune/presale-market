@@ -77,7 +77,7 @@ class Compare(unittest.TestCase):
                 '<aptNm>시험</aptNm><umdNm>대잠동</umdNm><jibun>1</jibun><excluUseAr>84.5</excluUseAr><dealAmount>57,772</dealAmount>'
                 '<floor>25</floor><dealYear>2026</dealYear><dealMonth>9</dealMonth><dealDay>15</dealDay>'
                 '<ownershipGbn> </ownershipGbn><cdealType> </cdealType></item></items></body></response>')
-        with mock.patch.object(presale, '_get', return_value=body):
+        with mock.patch.object(presale, '_open', return_value=body.encode()), mock.patch.object(presale.time, 'sleep'):
             self.assertEqual(presale.trades('47111', '202609', url=presale.SILV)[0]['kind'], '분양권')
             self.assertEqual(presale.trades('47111', '202609')[0]['kind'], '매매')
 
@@ -87,6 +87,62 @@ class Compare(unittest.TestCase):
         self.assertFalse(presale.settled('202610', today))
         self.assertTrue(presale.settled('202511', dt.date(2026, 1, 5)))
         self.assertFalse(presale.settled('202512', dt.date(2026, 1, 5)))
+
+
+OK_XML = ('<response><header><resultCode>000</resultCode></header><body><items><item><aptNm>시험</aptNm></item></items>'
+          '<totalCount>1</totalCount></body></response>')
+GATEWAY_XML = ('<OpenAPI_ServiceResponse><cmmMsgHeader><errMsg>SERVICE ERROR</errMsg><returnAuthMsg>{}</returnAuthMsg>'
+               '<returnReasonCode>{}</returnReasonCode></cmmMsgHeader></OpenAPI_ServiceResponse>')
+
+
+class Retry(unittest.TestCase):
+    """공공데이터포털 연결 끊김·5xx·오류 XML은 다시 받고, 키 미등록·한도 초과·404는 바로 멈춘다."""
+
+    def setUp(self):
+        patcher = mock.patch.object(presale.time, 'sleep')
+        self.sleep = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def response(self, body):
+        r = mock.MagicMock()
+        r.__enter__.return_value.read.return_value = body.encode()
+        return r
+
+    def http_error(self, code):
+        return presale.urllib.error.HTTPError('u', code, 'x', {}, mock.MagicMock(read=lambda: b'busy'))
+
+    def test_connection_reset_then_ok(self):
+        side = [ConnectionResetError(104, 'reset'), presale.urllib.error.URLError('timed out'), self.response('ok')]
+        with mock.patch.object(presale.urllib.request, 'urlopen', side_effect=side) as op:
+            self.assertEqual(presale._open('req', 'x'), b'ok')
+        self.assertEqual(op.call_count, 3)
+
+    def test_gives_up_after_all_waits(self):
+        with mock.patch.object(presale.urllib.request, 'urlopen', side_effect=ConnectionResetError(104, 'reset')) as op, \
+                self.assertRaises(RuntimeError):
+            presale._open('req', 'x')
+        self.assertEqual(op.call_count, len(presale.RETRY_WAITS) + 1)
+
+    def test_http_5xx_retried_404_not(self):
+        with mock.patch.object(presale.urllib.request, 'urlopen', side_effect=[self.http_error(503), self.response('ok')]):
+            self.assertEqual(presale._open('req', 'x'), b'ok')
+        with mock.patch.object(presale.urllib.request, 'urlopen', side_effect=[self.http_error(404)]) as op, \
+                self.assertRaises(RuntimeError):
+            presale._open('req', 'x')
+        self.assertEqual(op.call_count, 1)
+
+    def test_error_xml_and_broken_body_retried(self):
+        bodies = [GATEWAY_XML.format('HTTP_ERROR', '04').encode(), b'<html>', OK_XML.encode()]
+        with mock.patch.object(presale, '_open', side_effect=bodies) as op:
+            self.assertEqual(len(presale._items(presale.TRADE, '47111', '202609')), 1)
+        self.assertEqual(op.call_count, 3)
+
+    def test_permanent_portal_error_stops(self):
+        body = GATEWAY_XML.format('LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR', '22').encode()
+        with mock.patch.object(presale, '_open', return_value=body) as op, self.assertRaises(RuntimeError) as cm:
+            presale._items(presale.TRADE, '47111', '202609')
+        self.assertEqual(op.call_count, 1)
+        self.assertIn('LIMITED_NUMBER', str(cm.exception))
 
 
 # 공고문 첫 쪽 「단지 주요정보」를 pdftotext -layout으로 뽑은 글(2026-10-17 청약홈 첨부 PDF에서 그대로 옮김)
