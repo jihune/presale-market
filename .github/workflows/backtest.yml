@@ -1,6 +1,7 @@
 name: 시세 계산 백테스트
 
 # 손으로만 돌린다. 판정 규칙은 01_code/backtest.py 머리에 있고, 결과는 03_notes/backtest/(검증 묶음은 03_notes/backtest/holdout/)에,
+# 3회차부터 영남 실행이 검증 묶음 자료도 읽어 판정한다(검증 실행은 자료만 받는다).
 # 새로 받은 공동주택 단지 정보는 02_data/complexes/에 커밋한다.
 on:
   workflow_dispatch:
@@ -46,10 +47,19 @@ jobs:
           path: ${{ env.DIR }}
           key: ${{ env.KEY }}-${{ github.run_id }}
           restore-keys: ${{ env.KEY }}-
+      - name: 검증 묶음 캐시(영남 실행에서 3회차 판정용)
+        if: inputs.region != '검증'
+        uses: actions/cache@v4
+        with:
+          path: bt_holdout
+          key: holdout-${{ github.run_id }}
+          restore-keys: holdout-
       - name: 시험
         run: python -m unittest discover -s 01_code
       - name: 자료 받기
-        run: python 01_code/backtest_data.py "$DIR" "$REGION"
+        run: |
+          python 01_code/backtest_data.py "$DIR" "$REGION"
+          if [ "$REGION" != "검증" ]; then python 01_code/backtest_data.py bt_holdout 검증; fi
       - name: 자료 올리기
         if: inputs.upload == 'true'
         uses: actions/upload-artifact@v4
@@ -58,10 +68,10 @@ jobs:
           path: ${{ env.DIR }}
           retention-days: 3
       - name: 백테스트
-        if: inputs.data_only != 'true'
-        run: python 01_code/backtest.py "$DIR" "$OUT"
+        if: inputs.data_only != 'true' && inputs.region != '검증'
+        run: python 01_code/backtest.py "$DIR" "$OUT" bt_holdout
       - name: 결과를 main에 저장
-        if: inputs.data_only != 'true'
+        if: inputs.data_only != 'true' && inputs.region != '검증'
         run: |
           mkdir -p 02_data/complexes
           git add 03_notes/backtest 02_data/complexes
