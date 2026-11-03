@@ -1,0 +1,29 @@
+{
+ "v1": {
+  "N": 81,
+  "predicted": 81,
+  "coverage": 1.0,
+  "MdAPE": 0.15839184514499127,
+  "P80": 0.2753360849686832,
+  "bias": -0.15209401261233257,
+  "shuffle_share": 0.0,
+  "seeded_defect_MdAPE": 0.12505230859309036
+ },
+ "v2": {
+  "N": 81,
+  "predicted": 56,
+  "coverage": 0.691358024691358,
+  "MdAPE": 0.2865851216098628,
+  "P80": 0.4430589425210014,
+  "bias": -0.2865851216098628,
+  "geocode_calls": 1168,
+  "geocode_misses": 141,
+  "shuffle_share": 0.03
+ },
+ "alert_min_gap_ratio": 0.2753360849686832,
+ "verdict": [
+  "CONTROL_FAIL",
+  "V1_GRADES_NOT_OK",
+  "KEEP_V1"
+ ]
+}
