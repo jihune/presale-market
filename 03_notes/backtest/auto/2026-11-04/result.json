@@ -1,0 +1,76 @@
+{
+ "date": "2026-11-04",
+ "window": [
+  "2022-09-29",
+  "2025-03-29"
+ ],
+ "fit_window": [
+  "2022-09-29",
+  "2025-03-29"
+ ],
+ "fit": null,
+ "coef_now": {
+  "a": 0.0287,
+  "b": 0.098,
+  "q20": -0.075,
+  "q80": 0.0316,
+  "a0": 0.0131,
+  "q20_0": -0.0861,
+  "q80_0": 0.0301
+ },
+ "coef_new": null,
+ "holdout": {
+  "v1": {
+   "N": 0,
+   "predicted": 0,
+   "coverage": 0,
+   "MdAPE": null,
+   "P80": null,
+   "bias": null,
+   "shuffle_share": null,
+   "seeded_defect_MdAPE": {
+    "x1.10": null,
+    "x0.90": null
+   },
+   "defect_alive": false,
+   "range_hit": null,
+   "fallback_types": 0
+  },
+  "v0": {
+   "N": 0,
+   "predicted": 0,
+   "coverage": 0,
+   "MdAPE": null,
+   "P80": null,
+   "bias": null,
+   "shuffle_share": null,
+   "seeded_defect_MdAPE": {
+    "x1.10": null,
+    "x0.90": null
+   },
+   "defect_alive": false,
+   "range_hit": null,
+   "fallback_types": 0
+  },
+  "v2c": {
+   "N": 0,
+   "predicted": 0,
+   "coverage": 0,
+   "MdAPE": null,
+   "P80": null,
+   "bias": null,
+   "shuffle_share": null,
+   "seeded_defect_MdAPE": {
+    "x1.10": null,
+    "x0.90": null
+   },
+   "defect_alive": false,
+   "range_hit": null,
+   "fallback_types": 0
+  }
+ },
+ "verdict": [
+  "TOO_FEW"
+ ],
+ "adopted": null
+}
