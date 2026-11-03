@@ -1,8 +1,12 @@
-"""시세 계산 v2a: 공고 단지에서 가까운 신축·분양권 단지를 단지마다 한 표로 세어 거리 가중 중간값과 범위를 낸다.
+"""시세 계산 v2b: 공고 단지 가까운 단지들을 단지마다 한 표로 세고, 연식·분양권·세대수·상위 시공사·거리 차이를 보정해
+거리 가중 중간값과 20·80% 범위를 낸다.
+
+보정 계수는 공고 단지 시·군·구의 같은 면적대 단지(준공 15년 이내와 분양권)로 ㎡당 가격의 로그를 위 특성에 회귀해 얻는다.
+비교 단지 값을 공고 단지 조건(분양권, 신축, 공고 세대수, 공고 시공사, 거리 0)으로 옮긴 뒤 모은다.
 
 위치는 카카오 로컬 주소 검색으로 실행 안에서만 얻는다. 카카오 정책상 좌표·주소 결과를 저장할 수 없어
 이 모듈은 좌표를 메모리에만 두고 파일·로그에 쓰지 않는다. 결과에는 단지 이름과 0.1km로 반올림한 거리만 남긴다.
-환경 변수: KAKAO_REST_API_KEY.
+환경 변수: KAKAO_REST_API_KEY. 단지 세대수·시공사(공동주택 기본정보)는 부르는 쪽이 lookup으로 넘긴다(presale.Complexes).
 """
 
 import json
@@ -15,10 +19,31 @@ import urllib.parse
 import urllib.request
 
 KAKAO = 'https://dapi.kakao.com/v2/local/search/address.json'
-RADII = (1.5, 3.0, 5.0)  # km. 비교 단지가 3곳이 될 때까지 넓힌다
-NEW_YEARS = 10  # 이 햇수 안에 준공한 단지와 분양권만 비교한다
-VERY_NEW_YEARS = 3  # 이 안의 신축·분양권이 3곳 이상이면 그것만 쓴다
-METHOD = 'v2a: 1.5·3·5km 안 10년 이내 단지·분양권, 단지마다 한 표, 거리 가중 중간값과 20·80% 범위'
+RADII = (1.5, 3.0, 5.0)  # km. 같은 동 단지와 합쳐 비교 단지가 3곳이 될 때까지 넓힌다
+MAX_AGE = 15  # 준공 뒤 이 햇수 안의 단지와 분양권만 회귀와 비교에 쓴다
+MIN_FIT = 8  # 회귀에 쓸 단지가 이보다 적으면 v2b 값을 내지 않는다(부르는 쪽이 v1을 쓴다)
+RIDGE = 1.0  # 표준화한 특성의 능선 벌점. 단지 수가 적을 때 계수가 튀지 않게 한다
+CLIP = 0.4  # 한 비교 단지의 보정 폭(로그) 상한. e^0.4 ≈ 1.49배
+KM_CAP = 10.0  # 거리 특성은 10km에서 자른다
+FEATURES = ('age', 'presale', 'log_hh', 'top', 'km')
+METHOD = ('v2b: 같은 동과 1.5·3·5km 안 단지(15년 이내·분양권, 단지마다 한 표)를 시·군·구 단지 회귀로 연식·분양권·세대수·'
+          '상위 10 시공사·거리 보정, 거리 가중 중간값과 20·80% 범위. 같은 단지 거래가 있거나 값을 못 내면 v1')
+
+# 상위 시공사: 국토교통부 「'26년도 건설업체 시공능력평가 결과」(2026-07-30 보도자료 참고 2, 토목건축 상위 10곳. 같은 표의
+# 2025년 상위 10곳도 같은 회사)의 회사 이름(옛 이름 포함)과 아파트 브랜드. 띄어쓰기·「-」를 빼고 소문자로 쓴다. 출처는 03_notes/v2-설계.md 「v2b」
+# 「써밋」은 호반써밋과 겹쳐 넣지 않는다(대우건설 단지는 「푸르지오써밋」으로 잡힌다).
+TOP_BUILDERS = (
+    '삼성물산', '래미안',
+    '현대건설', '힐스테이트', '디에이치',
+    'gs건설', '지에스건설', 'lg건설', '엘지건설', '자이',
+    '현대엔지니어링', '현대엠코',
+    '대우건설', '푸르지오',
+    'dl이앤씨', '디엘이앤씨', '대림산업', 'e편한세상', '이편한세상', '아크로',
+    '롯데건설', '롯데캐슬', '르엘',
+    '포스코', '더샵', '오티에르',
+    'sk에코플랜트', '에스케이에코플랜트', 'sk건설', '에스케이건설', 'sk뷰', 'skview', '드파인',
+    '현대산업개발', '아이파크',
+)
 
 
 class Geocoder:
@@ -69,20 +94,26 @@ def near_area(t, area):
     return abs(t['area'] - area) <= max(area * 0.1, 5)
 
 
-def votes(pool, area, year):
-    """비슷한 면적 거래를 단지(이름, 법정동, 지번)마다 묶는다. 10년 이내 준공이거나 분양권·입주권인 단지만."""
+def is_top(*texts):
+    """단지 이름·시공사 글에 상위 시공사 이름이나 브랜드가 있는지(띄어쓰기·대소문자·「-」 무시)."""
+    text = re.sub(r'[\s\-·.,()]', '', ' '.join(t or '' for t in texts)).lower()
+    return any(w in text for w in TOP_BUILDERS)
+
+
+def votes(pool, area, year, max_age=MAX_AGE):
+    """비슷한 면적 거래를 단지(이름, 법정동, 지번)마다 묶는다. max_age년 안 준공 단지이거나 분양권·입주권인 단지만."""
     groups = {}
     for t in pool:
         if not near_area(t, area):
             continue
-        presale = t['kind'] != '매매'
-        if not presale and t['built'] < year - NEW_YEARS:
+        if t['kind'] == '매매' and t['built'] < year - max_age:
             continue
         groups.setdefault((t['apt'], t['umd'], t.get('jibun', '')), []).append(t)
     out = []
     for (apt, umd, jibun), ts in groups.items():
-        out.append({'apt': apt, 'umd': umd, 'jibun': jibun, 'n': len(ts), 'built': max(t['built'] for t in ts),
-                    'presale': any(t['kind'] != '매매' for t in ts),
+        presale = any(t['kind'] != '매매' for t in ts)
+        out.append({'apt': apt, 'umd': umd, 'jibun': jibun, 'n': len(ts), 'presale': presale,
+                    'built': None if presale else max(t['built'] for t in ts),
                     'per': statistics.median(t['price'] / t['area'] for t in ts)})
     return out
 
@@ -99,30 +130,88 @@ def weighted_quantile(pairs, q):
     return pairs[-1][0]
 
 
-def estimate(target, area, price, pool, year, prefix, geocode):
-    """target: 공고 단지 주소. prefix: 거래 주소 앞부분(「시도 시군구」). 비교 단지가 3곳 미만이면 None."""
+def solve(a, b):
+    """연립방정식 a x = b(가우스 소거, 부분 피벗)."""
+    n = len(b)
+    m = [row[:] + [b[i]] for i, row in enumerate(a)]
+    for c in range(n):
+        p = max(range(c, n), key=lambda r: abs(m[r][c]))
+        m[c], m[p] = m[p], m[c]
+        for r in range(n):
+            if r != c and m[c][c]:
+                f = m[r][c] / m[c][c]
+                m[r] = [x - f * y for x, y in zip(m[r], m[c], strict=True)]
+    return [m[i][n] / m[i][i] if m[i][i] else 0.0 for i in range(n)]
+
+
+def fit(rows, ys, lam=RIDGE):
+    """특성 행(rows)과 log ㎡당 값(ys)으로 표준화 능선 회귀(절편은 벌하지 않음). 원래 단위의 계수를 낸다(값이 같은 특성은 0)."""
+    k = len(rows[0])
+    means = [statistics.fmean(r[j] for r in rows) for j in range(k)]
+    sds = [statistics.pstdev([r[j] for r in rows]) for j in range(k)]
+    use = [j for j in range(k) if sds[j] > 1e-9]
+    xs = [[1.0] + [(r[j] - means[j]) / sds[j] for j in use] for r in rows]
+    p = len(use) + 1
+    a = [[sum(x[i] * x[j] for x in xs) + (lam if i == j and i else 0.0) for j in range(p)] for i in range(p)]
+    beta = solve(a, [sum(x[i] * y for x, y in zip(xs, ys, strict=True)) for i in range(p)])
+    coef = [0.0] * k
+    for i, j in enumerate(use):
+        coef[j] = beta[i + 1] / sds[j]
+    return coef
+
+
+def estimate(target, area, price, pool, year, prefix, geocode, lookup=None, umd='', households=0, top=False):
+    """v2b 시세. target: 공고 단지 주소, prefix: 거래 주소 앞부분(「시도 시군구」), umd: 공고 단지 읍·면·동,
+    lookup(apt, umd, jibun, built): 단지 세대수·시공사 {'households', 'builder'} 또는 None, households·top: 공고 단지 세대수와 상위 시공사 여부.
+    공고 단지 좌표가 없거나, 회귀할 단지가 MIN_FIT 미만이거나, 비교 단지가 3곳 미만이면 None."""
     here = geocode(clean_address(target))
     if not here:
         return None
     cands = []
     for c in votes(pool, area, year):
         spot = geocode(f"{prefix} {c['umd']} {c['jibun']}".strip()) if c['jibun'] else None
-        if spot:
-            cands.append({**c, 'km': km(here, spot)})
+        if not spot:
+            continue
+        info = lookup(c['apt'], c['umd'], c['jibun'], c['built']) if lookup and not c['presale'] else None
+        hh = (info or {}).get('households') or 0
+        cands.append({**c, 'km': km(here, spot), 'households': hh or None,
+                      'top': is_top(c['apt'], (info or {}).get('builder', ''))})
+    if len(cands) < MIN_FIT:
+        return None
+    known = [math.log(c['households']) for c in cands if c['households']]
+    mid_hh = statistics.median(known) if known else 0.0
+
+    def feats(c):
+        return [0 if c['presale'] else max(0, year - c['built']), float(c['presale']),
+                math.log(c['households']) if c['households'] else mid_hh, float(c['top']), min(c['km'], KM_CAP)]
+    coef = fit([feats(c) for c in cands], [math.log(c['per']) for c in cands])
+    goal = [0, 1.0, math.log(households) if households else mid_hh, float(top), 0.0]
+    clipped = 0
+    for c in cands:
+        shift = sum(b * (g - x) for b, g, x in zip(coef, goal, feats(c), strict=True))
+        clipped += abs(shift) > CLIP
+        c['adj'] = c['per'] * math.exp(max(-CLIP, min(CLIP, shift)))
     for radius in RADII:
-        picked = [c for c in cands if c['km'] <= radius]
+        picked = [c for c in cands if c['km'] <= radius or (umd and c['umd'].split(' ')[0] == umd)]
         if len(picked) >= 3:
             break
     else:
         return None
-    newest = [c for c in picked if c['presale'] or c['built'] >= year - VERY_NEW_YEARS]
-    if len(newest) >= 3:
-        picked = newest
-    pairs = [(c['per'], math.sqrt(min(c['n'], 5)) / (0.5 + c['km'])) for c in picked]
+    pairs = [(c['adj'], math.sqrt(min(c['n'], 5)) / (0.5 + c['km'])) for c in picked]
     per = weighted_quantile(pairs, 0.5)
     market = round(per * area)
-    return {'scope': f'{radius:g}km 안 {len(picked)}개 단지', 'per': per, 'market': market,
+    return {'method': 'v2b', 'scope': f'같은 동과 {radius:g}km 안 {len(picked)}개 단지(보정)', 'per': per, 'market': market,
             'gain': market - price, 'rate': (market - price) / price,
             'range': (round(weighted_quantile(pairs, 0.2) * area), round(weighted_quantile(pairs, 0.8) * area)),
+            'model': {'n': len(cands), 'hh_known': len(known), 'clipped': clipped,
+                      'coef': {f: round(b, 4) for f, b in zip(FEATURES, coef, strict=True)}},
             'comps': [{'apt': c['apt'], 'km': round(c['km'], 1), 'built': c['built'], 'presale': c['presale'],
-                       'n': c['n'], 'per': round(c['per'], 1)} for c in sorted(picked, key=lambda c: c['km'])]}
+                       'households': c['households'], 'top': c['top'], 'n': c['n'], 'per': round(c['per'], 1),
+                       'adj': round(c['adj'], 1)} for c in sorted(picked, key=lambda c: c['km'])]}
+
+
+def pick(v1, v2b):
+    """같은 단지 거래로 낸 v1(조합원 취소분·무순위)이 가장 정확하다. 그다음 v2b, v2b가 없으면 v1."""
+    if v1 and v1.get('tier') == 0:
+        return v1
+    return v2b or v1

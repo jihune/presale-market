@@ -96,7 +96,7 @@ def v1_of(n, area, price, data):
                 and t['date'] >= start.isoformat()]
         c = presale.compare(area, price, pool, n['umd'], d.year, name=n['detail'].get('HOUSE_NM', ''))
         if c:
-            return c['per']
+            return c
     return None
 
 
@@ -119,12 +119,16 @@ def notice_rows(notices, data, predict):
             truths.append(truth)
             if pred is not None:
                 preds.append(pred)
-                errs.append(pred / truth - 1)
+                errs.append(pred['per'] / truth - 1)
         if truths:
             key = f"{n['detail']['HOUSE_MANAGE_NO']}:{n['detail']['PBLANC_NO']}"
+            ranged = [p for p in preds if p.get('lo') is not None]
             out.append({'key': key, 'name': n['detail'].get('HOUSE_NM', ''), 'sido': n['sido'], 'date': n['detail']['RCRIT_PBLANC_DE'],
-                        'pred': statistics.median(preds) if preds else None, 'truth': statistics.median(truths),
-                        'err': statistics.median(errs) if errs else None, 'types': len(truths)})
+                        'pred': statistics.median(p['per'] for p in preds) if preds else None, 'truth': statistics.median(truths),
+                        'err': statistics.median(errs) if errs else None, 'types': len(truths),
+                        'lo': statistics.median(p['lo'] for p in ranged) if ranged else None,
+                        'hi': statistics.median(p['hi'] for p in ranged) if ranged else None,
+                        'fallback': sum(bool(p.get('fallback')) for p in preds)})
     return out
 
 
@@ -153,17 +157,40 @@ def shuffle_share(rows, observed):
 
 
 def write_tsv(path, rows):
-    cols = ['key', 'name', 'sido', 'date', 'types', 'pred', 'truth', 'err']
+    cols = ['key', 'name', 'sido', 'date', 'types', 'pred', 'truth', 'err', 'lo', 'hi', 'fallback']
     lines = ['\t'.join(cols)] + ['\t'.join('' if r[c] is None else str(r[c]) for c in cols) for r in rows]
     path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
-def v2_of(n, area, price, data, geocode):
+def v2b_of(n, area, price, data, geocode, complexes):
+    """v2b 예측(㎡당). 같은 단지 거래로 낸 v1이 있으면 그것을, v2b가 값을 못 내면 v1을 쓴다(fallback)."""
     d = dt.date.fromisoformat(n['detail']['RCRIT_PBLANC_DE'])
     start = d - dt.timedelta(days=365)
     pool = [t for t in load_rows(data, n['code'], months_between(start, d)) if start.isoformat() <= t['date'] < d.isoformat()]
-    got = v2.estimate(n['detail'].get('HSSPLY_ADRES', ''), area, price, pool, d.year, f"{n['sido']} {n['sigungu']}".strip(), geocode)
-    return got['per'] if got else None
+    p = n['detail']
+    got = v2.estimate(p.get('HSSPLY_ADRES', ''), area, price, pool, d.year, f"{n['sido']} {n['sigungu']}".strip(), geocode,
+                      lookup=lambda apt, umd, jibun, built: complexes.lookup(n['code'], apt, umd, jibun, built), umd=n['umd'],
+                      households=int(p.get('TOT_SUPLY_HSHLDCO') or 0), top=v2.is_top(p.get('HOUSE_NM'), p.get('CNSTRCT_ENTRPS_NM')))
+    one = v1_of(n, area, price, data)
+    c = v2.pick(one, got)
+    if not c:
+        return None
+    if c is got:
+        return {'per': c['per'], 'lo': c['range'][0] / area, 'hi': c['range'][1] / area, 'model': c['model']}
+    return {'per': c['per'], 'fallback': True}
+
+
+def defect_mdape(rows, factor):
+    return metrics([{**r, 'err': None if r['err'] is None else (1 + r['err']) * factor - 1} for r in rows])['MdAPE']
+
+
+def measure(rows):
+    """지표, 섞기 대조, 심은 결함 대조(×1.10·×0.90 가운데 하나라도 MdAPE가 커져야 산다)."""
+    m = metrics(rows)
+    m['shuffle_share'] = shuffle_share(rows, m['MdAPE']) if m['MdAPE'] is not None else None
+    m['seeded_defect_MdAPE'] = {'x1.10': defect_mdape(rows, 1.10), 'x0.90': defect_mdape(rows, 0.90)}
+    m['defect_alive'] = m['MdAPE'] is not None and any(v > m['MdAPE'] for v in m['seeded_defect_MdAPE'].values())
+    return m
 
 
 def main(data, out):
@@ -173,29 +200,43 @@ def main(data, out):
     result, verdict = {}, []
     v1 = notice_rows(notices, data, lambda n, area, price: v1_of(n, area, price, data))
     write_tsv(out / 'v1-errors.tsv', v1)
-    m1 = metrics(v1)
-    m1['shuffle_share'] = shuffle_share(v1, m1['MdAPE'])
-    defect = [{**r, 'err': None if r['err'] is None else (1 + r['err']) * 1.10 - 1} for r in v1]
-    m1['seeded_defect_MdAPE'] = metrics(defect)['MdAPE']
-    result['v1'] = m1
-    control_ok = m1['seeded_defect_MdAPE'] > m1['MdAPE']
-    verdict.append('CONTROL_OK' if control_ok else 'CONTROL_FAIL')
+    m1 = result['v1'] = measure(v1)
+    alive = [m1['defect_alive']]
     if m1['shuffle_share'] > 0.05:
         verdict.append('V1_NO_SIGNAL')
     verdict.append('V1_GRADES_OK' if m1['P80'] <= P80_V1_OK else 'V1_GRADES_NOT_OK')
-    adopted = m1
-    geocode = v2.Geocoder()
+    adopted = ('v1', m1)
+    geocode, complexes = v2.Geocoder(), presale.Complexes(today=presale.today_kst())
     if geocode.key:
-        rows2 = notice_rows(notices, data, lambda n, area, price: v2_of(n, area, price, data, geocode))
-        write_tsv(out / 'v2-errors.tsv', rows2)
-        m2 = metrics(rows2)
-        m2['geocode_calls'], m2['geocode_misses'], m2['geocode_errors'] = geocode.calls, geocode.misses, geocode.errors
-        m2['shuffle_share'] = shuffle_share(rows2, m2['MdAPE']) if m2['MdAPE'] is not None else None
-        result['v2'] = m2
-        adopt = m2['MdAPE'] is not None and m2['MdAPE'] <= m1['MdAPE'] - V2_MARGIN and m2['coverage'] >= m1['coverage'] - COVERAGE_SLACK
-        verdict.append('ADOPT_V2' if adopt else 'KEEP_V1')
-        adopted = m2 if adopt else m1
-    result['alert_min_gap_ratio'] = adopted['P80']
+        models = []
+
+        def predict(n, area, price):
+            got = v2b_of(n, area, price, data, geocode, complexes)
+            if got and 'model' in got:
+                models.append(got['model'])
+            return got
+        rows = notice_rows(notices, data, predict)
+        write_tsv(out / 'v2b-errors.tsv', rows)
+        m2 = result['v2b'] = measure(rows)
+        alive.append(m2['defect_alive'])
+        ranged = [r for r in rows if r['lo'] is not None]
+        m2.update({'fallback_types': sum(r['fallback'] for r in rows), 'fitted_types': len(models),
+                   'range_hit': sum(r['lo'] <= r['truth'] <= r['hi'] for r in ranged) / len(ranged) if ranged else None,
+                   'range_notices': len(ranged),
+                   'geocode_calls': geocode.calls, 'geocode_misses': geocode.misses, 'geocode_errors': geocode.errors,
+                   'kapt_calls': complexes.calls, 'kapt_errors': complexes.errors, 'kapt_stopped': complexes.stopped,
+                   'comps_hh_unknown': sum(mo['n'] - mo['hh_known'] for mo in models),
+                   'coef_median': {f: statistics.median(mo['coef'][f] for mo in models) for f in v2.FEATURES} if models else None})
+        no_signal = m2['shuffle_share'] is None or m2['shuffle_share'] > 0.05
+        if no_signal:
+            verdict.append('V2B_NO_SIGNAL')
+        adopt = not no_signal and m2['MdAPE'] <= m1['MdAPE'] - V2_MARGIN and m2['coverage'] >= m1['coverage'] - COVERAGE_SLACK
+        verdict.append('ADOPT_V2B' if adopt else 'KEEP_V1')
+        if adopt:
+            adopted = ('v2b', m2)
+    verdict.insert(0, 'CONTROL_OK' if all(alive) else 'CONTROL_FAIL')
+    result['adopted'] = {'method': adopted[0], 'MdAPE': adopted[1]['MdAPE'], 'P80': adopted[1]['P80'], 'N': adopted[1]['N']}
+    result['alert_min_gap_ratio'] = adopted[1]['P80']
     result['verdict'] = verdict
     (out / 'result.json').write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding='utf-8')
     for name, m in result.items():

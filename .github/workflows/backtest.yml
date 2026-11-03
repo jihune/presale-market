@@ -1,6 +1,6 @@
 name: 시세 계산 백테스트
 
-# 손으로만 돌린다. 판정 규칙은 01_code/backtest.py 머리에 있고, 결과는 03_notes/backtest/에 커밋한다.
+# 손으로만 돌린다. 판정 규칙은 01_code/backtest.py 머리에 있고, 결과는 03_notes/backtest/에, 새로 받은 공동주택 단지 정보는 02_data/complexes/에 커밋한다.
 on:
   workflow_dispatch:
 
@@ -38,7 +38,8 @@ jobs:
         run: python 01_code/backtest.py bt 03_notes/backtest
       - name: 결과를 main에 저장
         run: |
-          git add 03_notes/backtest
+          mkdir -p 02_data/complexes
+          git add 03_notes/backtest 02_data/complexes
           git diff --cached --quiet && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
