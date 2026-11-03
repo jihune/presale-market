@@ -1,8 +1,7 @@
 name: 시세 계산 백테스트
 
-# 손으로만 돌린다. 판정 규칙은 01_code/backtest.py 머리에 있고, 결과는 03_notes/backtest/(검증 묶음은 03_notes/backtest/holdout/)에,
+# 손으로만 돌린다. 판정 규칙은 01_code/backtest.py 머리에 있고, 결과는 03_notes/backtest/(검증 묶음은 03_notes/backtest/holdout/)에 커밋한다.
 # 3회차부터 영남 실행이 검증 묶음 자료도 읽어 판정한다(검증 실행은 자료만 받는다).
-# 새로 받은 공동주택 단지 정보는 02_data/complexes/에 커밋한다.
 on:
   workflow_dispatch:
     inputs:
@@ -28,7 +27,6 @@ jobs:
     timeout-minutes: 330
     env:
       DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
-      KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
       REGION: ${{ inputs.region }}
       # 영남은 1·2회차와 같은 캐시(backtest-)를 이어 쓴다. 검증 묶음 캐시 이름은 backtest-로 시작하지 않게 해 섞이지 않는다
       DIR: ${{ inputs.region == '검증' && 'bt_holdout' || 'bt' }}
@@ -73,8 +71,7 @@ jobs:
       - name: 결과를 main에 저장
         if: inputs.data_only != 'true' && inputs.region != '검증'
         run: |
-          mkdir -p 02_data/complexes
-          git add 03_notes/backtest 02_data/complexes
+          git add 03_notes/backtest
           git diff --cached --quiet && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

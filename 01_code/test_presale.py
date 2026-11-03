@@ -98,11 +98,10 @@ GATEWAY_XML = ('<OpenAPI_ServiceResponse><cmmMsgHeader><errMsg>SERVICE ERROR</er
 
 
 class FakeCache:
-    """TradeCache 대역: 어느 기간이든 같은 거래를 준다. geocode를 주면 v2b를 낸다."""
+    """TradeCache 대역: 어느 기간이든 같은 거래를 준다. method가 v0·v2c면 그 방법으로 낸다."""
 
-    def __init__(self, rows, geocode=None, method='v1'):
-        self.rows, self.geocode, self.codes, self.method = rows, geocode, {'시 구': '11111'}, method
-        self.complexes = mock.Mock(lookup=mock.Mock(return_value=None))
+    def __init__(self, rows, method='v1'):
+        self.rows, self.codes, self.method = rows, {'시 구': '11111'}, method
 
     def pool(self, sido, sgg, months, skip=0, kind='trade'):
         return self.rows, f'{sido} {sgg}'
@@ -116,7 +115,7 @@ NEW_MODELS = [{'HOUSE_TY': '084.9000A', 'LTTOT_TOP_AMOUNT': '80000'}]
 
 
 class MarketOutput(unittest.TestCase):
-    """공개 JSON의 시세 칸: v1에도 범위와 단지별 묶음을 붙이고, 좌표가 있으면 v2b를 쓴다. 오차는 백테스트 결과에서 읽는다."""
+    """공개 JSON의 시세 칸: v1에도 범위와 단지별 묶음을 붙이고, 백테스트가 v2c를 채택했으면 v2c를 쓴다. 오차는 백테스트 결과에서 읽는다."""
 
     def rows(self):
         out = []
@@ -131,16 +130,6 @@ class MarketOutput(unittest.TestCase):
         self.assertEqual(c['method'], 'v1')
         self.assertEqual(c['range'], (round(c['q'][0] * 84.9), round(c['q'][1] * 84.9)))
         self.assertEqual(sum(x['n'] for x in c['comps']), len(c['trades']))
-
-    def test_v2b_when_geocode_given(self):
-        spots = {'시 구 대상동 1': (36.0, 128.0), **{f'시 구 가동 {i}': (36.0 + 0.0036 * i, 128.0) for i in range(1, 11)}}
-        cache = FakeCache(self.rows(), geocode=spots.get)
-        types = presale.market_types(NEW, NEW_MODELS, '시', '구', '대상동', dt.date(2026, 11, 3), cache, [])
-        c = types[0]['cmp']
-        self.assertEqual(c['method'], 'v2b')
-        self.assertEqual(c['v1']['scope'], '같은 시·군·구, 5년 이내 단지')
-        self.assertTrue(c['comps'] and c['range'][0] <= c['market'] <= c['range'][1])
-        cache.complexes.lookup.assert_called_with('11111', '단지10', '가동', '10', 2022)
 
     def test_v2c_is_price_times_expected_premium(self):
         # 주변 시세(v1)가 분양가 ㎡당 942.3의 1.07배쯤이면 x ≈ 0.07, 예상 웃돈 e^(0.0287 + 0.098 × x) − 1 ≈ +3.6%
@@ -163,12 +152,12 @@ class MarketOutput(unittest.TestCase):
             with mock.patch.object(presale, 'BACKTEST', path):
                 self.assertEqual(presale.adopted_method(), {'method': 'v1', 'MdAPE': 0.158, 'P80': 0.275, 'N': 81})
                 path.write_text('{"v1": {"MdAPE": 0.158, "P80": 0.275, "N": 81}, '
-                                '"adopted": {"method": "v2b", "MdAPE": 0.09, "P80": 0.18, "N": 81}}', encoding='utf-8')
+                                '"adopted": {"method": "v2c", "MdAPE": 0.09, "P80": 0.18, "N": 81}}', encoding='utf-8')
                 self.assertEqual(presale.adopted_method()['P80'], 0.18)
                 out = presale.Path(d, 'latest.json')
                 presale.write(out, [], dt.date(2026, 11, 3), [])
                 doc = presale.json.loads(out.read_text(encoding='utf-8'))
-                self.assertEqual((doc['schema'], doc['market_error']['method'], doc['market_method']), (2, 'v2b', presale.v2.METHOD))
+                self.assertEqual((doc['schema'], doc['market_error']['method'], doc['market_method']), (2, 'v2c', presale.v2.METHOD_C))
 
 
 class Retry(unittest.TestCase):

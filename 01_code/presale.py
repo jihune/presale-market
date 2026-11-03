@@ -46,8 +46,6 @@ TRADE = 'https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTr
 SILV = 'https://apis.data.go.kr/1613000/RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade'
 RENT = 'https://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent'
 REGION = 'https://apis.data.go.kr/1741000/StanReginCd/getStanReginCdList'
-KAPT_LIST = 'https://apis.data.go.kr/1613000/AptListService4/getSigunguAptList4'
-KAPT_BASIS = 'https://apis.data.go.kr/1613000/AptBasisInfoServiceV5/getAphusBassInfoV5'
 # 청약홈 상세 화면과 첨부 PDF는 브라우저가 아닌 요청을 가끔 거른다
 BROWSER = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36'}
 
@@ -211,109 +209,6 @@ def rents(lawd_cd, yyyymm):
         'deposit': int(_text(it, 'deposit').replace(',', '') or 0), 'monthly': int(_text(it, 'monthlyRent').replace(',', '') or 0),
         'built': int(_text(it, 'buildYear') or 0), 'kind': _text(it, 'contractType'), 'floor': _text(it, 'floor'), 'date': _date(it),
     } for it in _items(RENT, lawd_cd, yyyymm)]
-
-
-def _kapt(body):
-    """공동주택 단지 API JSON의 body. 자료 없음은 {}, 그날 안 되는 오류는 RuntimeError, 나머지 오류(오류 XML 등)는 Transient."""
-    if body.lstrip().startswith('<'):
-        if any(p in body for p in PERMANENT):
-            raise RuntimeError(re.sub(r'\s+', ' ', body)[:200])
-        raise Transient(re.sub(r'\s+', ' ', body)[:120])
-    r = json.loads(body).get('response') or {}
-    head = r.get('header') or {}
-    if head.get('resultCode') == '00':
-        return r.get('body') or {}
-    msg = f"{head.get('resultCode')} {head.get('resultMsg')}"
-    if head.get('resultCode') == '03' or 'NODATA' in msg:
-        return {}
-    if any(p in msg for p in PERMANENT):
-        raise RuntimeError(msg)
-    raise Transient(msg)
-
-
-class Complexes:
-    """공동주택 단지 목록(AptListService4)과 기본정보(AptBasisInfoServiceV5). 공공데이터(이용허락범위 제한 없음)라
-    02_data/complexes/<시군구코드>.json에 남겨 다시 부르지 않는다. 전화·팩스·홈페이지·도로명주소 칸은 남기지 않는다.
-    기본정보는 비교에 들어가는 단지만 부른다. 개발계정 하루 5,000건이라 한 실행에 limit번까지 부르고, 그날 한도 오류가 나면 멈춘다."""
-
-    LIST_DAYS = 180  # 목록은 이 날수가 지나면 다시 받는다(새 단지)
-
-    def __init__(self, root=None, today=None, limit=None):
-        self.root, self.today = Path(root or DATA / 'complexes'), today or today_kst()
-        self.limit = int(limit if limit is not None else os.environ.get('KAPT_LIMIT') or 4000)
-        self.files, self.calls, self.errors, self.stopped = {}, 0, 0, ''
-
-    def _load(self, code):
-        if code in self.files:
-            return self.files[code]
-        path = self.root / f'{code}.json'
-        doc = json.loads(path.read_text(encoding='utf-8')) if path.exists() else {'list_date': '', 'list': [], 'basis': {}}
-        fresh = doc['list_date'] and (self.today - dt.date.fromisoformat(doc['list_date'])).days <= self.LIST_DAYS
-        if not fresh and not self.stopped:
-            try:
-                items, page = [], 1
-                while True:
-                    body = _get(KAPT_LIST, {'sigunguCode': code, 'numOfRows': 1000, 'pageNo': page}, 'getSigunguAptList4', parse=_kapt)
-                    got = body.get('items') or []
-                    items += got if isinstance(got, list) else got.get('item') or []
-                    if not got or page * 1000 >= int(body.get('totalCount') or 0):
-                        break
-                    page += 1
-                doc['list'] = [{'code': it['kaptCode'], 'name': it.get('kaptName') or '',
-                                'dong': ' '.join(x for x in (it.get('as3'), it.get('as4')) if x)} for it in items]
-                doc['list_date'] = self.today.isoformat()
-                self._save(code, doc)
-            except RuntimeError as ex:
-                self._fail(ex)
-        self.files[code] = doc
-        return doc
-
-    def _save(self, code, doc):
-        self.root.mkdir(parents=True, exist_ok=True)
-        doc['basis'] = dict(sorted(doc['basis'].items()))
-        (self.root / f'{code}.json').write_text(json.dumps(doc, ensure_ascii=False, indent=0), encoding='utf-8')
-
-    def _fail(self, ex):
-        self.errors += 1
-        print(f'공동주택 단지 API: {ex}', flush=True)
-        if any(p in str(ex) for p in PERMANENT):
-            self.stopped = str(ex)[:100]
-
-    def basis(self, code, kapt):
-        doc = self._load(code)
-        if kapt not in doc['basis'] and not self.stopped and self.calls < self.limit:
-            self.calls += 1
-            try:
-                it = _get(KAPT_BASIS, {'kaptCode': kapt}, 'getAphusBassInfoV5', parse=_kapt).get('item') or {}
-            except RuntimeError as ex:
-                self._fail(ex)
-                return None
-            hh = int(float(it.get('kaptdaCnt') or 0)) or int(float(it.get('hoCnt') or 0))
-            use = str(it.get('kaptUsedate') or '')
-            doc['basis'][kapt] = {'name': it.get('kaptName') or '', 'addr': it.get('kaptAddr') or '', 'households': hh,
-                                  'builder': it.get('kaptBcompany') or '', 'year': int(use[:4]) if use[:4].isdigit() else None} if it else None
-            self._save(code, doc)
-        return doc['basis'].get(kapt)
-
-    def lookup(self, code, apt, umd, jibun, built):
-        """실거래 단지(이름, 법정동, 지번, 준공연도)를 K-apt 단지에 붙여 {'households', 'builder'}를 낸다. 못 붙이면 None.
-        같은 법정동에서 이름이 같거나 한쪽이 다른 쪽을 품는 단지(3곳까지)를 보고, 사용승인 연도가 2년 넘게 다르면 버린다.
-        후보가 여럿이면 지번 본번이 같은 단지를 고른다."""
-        def norm(s):
-            return re.sub(r'\(.*?\)|[\s\-·.,]|아파트', '', s or '')
-        a = norm(apt)
-        cands = [it for it in self._load(code)['list'] if it['dong'] == umd
-                 and (norm(it['name']) == a or (min(len(a), len(norm(it['name']))) >= 4 and (a in norm(it['name']) or norm(it['name']) in a)))][:3]
-        main = (jibun or '').split('-')[0]
-        found = []
-        for it in cands:
-            b = self.basis(code, it['code'])
-            if b and not (b['year'] and built and abs(b['year'] - built) > 1):
-                found.append(b)
-        best = next((b for b in found if main and re.search(rf'\s산?{re.escape(main)}(-\d+)?\s', f" {b['addr']} ")), None)
-        if not best and len(found) == 1:
-            best = found[0]
-        return {'households': best['households'], 'builder': best['builder']} if best else None
 
 
 def settled(yyyymm, today):
@@ -565,10 +460,9 @@ def jeonse(area, pool, umd, this_year):
 
 
 class TradeCache:
-    def __init__(self, today, geocode=None, complexes=None, method='v1'):
-        """geocode·complexes를 주면 시세를 v2b로, method가 v0·v2c면 분양가 × 예상 웃돈으로 낸다(백테스트가 채택한 방법을 collect가 준다)."""
-        self.today, self.codes, self.months = today, {}, {}
-        self.geocode, self.complexes, self.method = geocode, complexes, method
+    def __init__(self, today, method='v1'):
+        """method가 v0·v2c면 시세를 분양가 × 예상 웃돈으로 낸다(백테스트가 채택한 방법을 collect가 준다)."""
+        self.today, self.codes, self.months, self.method = today, {}, {}, method
 
     def pool(self, sido, sgg, months, skip=0, kind='trade'):
         """최근 months개월(skip개월 앞부터) 실거래. kind='trade'는 매매와 분양권, 'rent'는 전월세."""
@@ -599,13 +493,13 @@ class TradeCache:
 
 
 def adopted_method():
-    """백테스트(03_notes/backtest/result.json)가 채택한 시세 방법과 그 오차 {'method', 'MdAPE', 'P80', 'N'}."""
+    """백테스트(03_notes/backtest/result.json)가 채택한 시세 방법과 그 오차 {'method', 'MdAPE', 'P80', 'N'}(3회차부터 검증 묶음 값)."""
     res = json.loads(BACKTEST.read_text(encoding='utf-8'))
     return res.get('adopted') or {'method': 'v1', **{k: res['v1'][k] for k in ('MdAPE', 'P80', 'N')}}
 
 
 def with_view(c, area):
-    """v1 결과에 v2b와 같은 꼴의 범위(근거 거래 ㎡당 25·75%)와 단지별 묶음을 붙인다."""
+    """v1 결과에 범위(근거 거래 ㎡당 25·75%)와 단지별 묶음을 붙인다."""
     groups = {}
     for t in c['trades']:
         groups.setdefault(t['apt'], []).append(t['price'] / t['area'])
@@ -614,7 +508,7 @@ def with_view(c, area):
 
 
 def market_types(p, models, sido, sgg, umd, today, cache, notes):
-    """주택형마다 분양가와 시세 비교(v1, cache에 좌표가 있으면 v2b), 전세 추정, 이전 6개월 대비 흐름."""
+    """주택형마다 분양가와 시세 비교(v1, 백테스트가 v0·v2c를 채택했으면 그 방법), 전세 추정, 이전 6개월 대비 흐름."""
     pool, name = cache.pool(sido, sgg, 6)
     if pool is None:
         notes.append(f'법정동코드 「{name}」 미확인: 실거래 비교 불가')
@@ -664,13 +558,6 @@ def market_types(p, models, sido, sgg, umd, today, cache, notes):
             b = v2.estimate_c(c, t['area'], t['price'], slope=cache.method == 'v2c')
             if v2.pick(c, b) is b:
                 t['cmp'] = {**b, 'trend': c['trend'] if c else None}
-        elif cache.geocode:
-            year_pool = cache.pool(sido, sgg, 12)[0]
-            b = v2.estimate(p.get('HSSPLY_ADRES', ''), t['area'], t['price'], year_pool, today.year, f'{sido} {sgg}'.strip(),
-                            cache.geocode, lookup=lambda apt, u, jibun, built: cache.complexes.lookup(cache.codes[f'{sido} {sgg}'.strip()], apt, u, jibun, built),
-                            umd=umd, households=int(p.get('TOT_SUPLY_HSHLDCO') or 0), top=v2.is_top(house, p.get('CNSTRCT_ENTRPS_NM')))
-            if b and v2.pick(c, b) is b:
-                t['cmp'] = {**b, 'trend': c['trend'] if c else None, 'v1': {k: c[k] for k in ('scope', 'market', 'rate')} if c else None}
     return types
 
 
@@ -718,7 +605,7 @@ def write(path, notices, today, errors, error=None):
     error = error or adopted_method()
     doc = {'schema': 2, 'generated_at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
            'today': today.isoformat(), 'lookback_days': LOOKBACK_DAYS,
-           'market_method': {'v2b': v2.METHOD, 'v2c': v2.METHOD_C, 'v0': v2.METHOD_0}.get(error['method'], MARKET_METHOD),
+           'market_method': {'v2c': v2.METHOD_C, 'v0': v2.METHOD_0}.get(error['method'], MARKET_METHOD),
            'market_error': error,
            'notices': notices, 'errors': errors}
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -727,11 +614,7 @@ def write(path, notices, today, errors, error=None):
 
 def collect(found, today, path):
     error = adopted_method()
-    geocode = v2.Geocoder() if error['method'] == 'v2b' else None
-    cache = TradeCache(today, geocode if geocode and geocode.key else None, Complexes(today=today),
-                       method=error['method'] if error['method'] in ('v0', 'v2c') else 'v1')
-    if geocode and not geocode.key:
-        print('KAKAO_REST_API_KEY 없음: 시세를 v1로 낸다')
+    cache = TradeCache(today, method=error['method'] if error['method'] in ('v0', 'v2c') else 'v1')
     notices, errors = [], []
     for p, kind, mdl in found:
         try:
@@ -739,11 +622,6 @@ def collect(found, today, path):
         except RuntimeError as ex:
             errors.append(f"{p.get('HOUSE_NM')}: {ex}")
             print(f"{p.get('HOUSE_NM')}: 조회 실패 {ex}")
-    if cache.geocode:
-        error = {**error, 'geocode_calls': geocode.calls, 'geocode_misses': geocode.misses, 'kapt_calls': cache.complexes.calls}
-    elif error['method'] == 'v2b':  # v2b를 채택했는데 좌표 키가 없으면 v1로 냈으니 v1 오차를 적는다
-        res = json.loads(BACKTEST.read_text(encoding='utf-8'))
-        error = {'method': 'v1', **{k: res['v1'][k] for k in ('MdAPE', 'P80', 'N')}}
     write(path, notices, today, errors, error)
     print(f'공고 {len(notices)}건, 실패 {len(errors)}건 → {path.relative_to(ROOT)}')
 
