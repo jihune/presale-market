@@ -15,12 +15,16 @@
 | 경로 | 내용 |
 |---|---|
 | `01_code/presale.py` | 공고 모으기, 공고문 읽기, 실거래 받기, 시세 계산, `collect`·`check`·`trades` 명령 |
-| `01_code/test_presale.py` | 시험. `python -m unittest discover -s 01_code` |
+| `01_code/v2.py` | 시세 v2b(거리·연식·분양권·세대수·상위 시공사 보정). 카카오 좌표는 실행 안에서만 쓴다 |
+| `01_code/backtest.py`, `backtest_data.py` | 시세 백테스트(판정 규칙은 `backtest.py` 머리)와 지난 공고·실거래 받기 |
+| `01_code/test_presale.py` | 시험(`test_v2.py`도). `python -m unittest discover -s 01_code` |
 | `02_data/latest.json` | 매일 결과(Actions가 커밋) |
 | `02_data/check.json` | 손으로 돌린 지난 공고 결과 |
 | `02_data/notices/` | 공고마다 공고문에서 읽은 조건(다시 받지 않으려고 남김) |
+| `02_data/complexes/` | 시·군·구마다 공동주택 단지 목록과 붙인 단지의 기본정보(세대수, 시공사, 사용승인 연도). 연락처 칸은 두지 않는다 |
 | `03_notes/` | 시세 계산 설계, 백테스트 판정 규칙과 결과 |
 | `.github/workflows/collect.yml` | 매일 모으기 |
+| `.github/workflows/backtest.yml` | 시세 백테스트(손으로 돌림). 결과는 `03_notes/backtest/` |
 | `.github/workflows/merge-session-branches.yml` | 세션 브랜치(`claude/…`, `ccr-…`)를 main에 합침 |
 
 ## 3. 작업 방식

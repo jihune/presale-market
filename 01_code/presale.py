@@ -30,10 +30,13 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import v2
+
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / '02_data'
 NOTICES = DATA / 'notices'
 CACHE = Path(os.environ.get('PRESALE_CACHE') or ROOT / 'cache')
+BACKTEST = ROOT / '03_notes' / 'backtest' / 'result.json'
 KST = dt.timezone(dt.timedelta(hours=9))
 LOOKBACK_DAYS = 14
 MARKET_METHOD = 'v1: 행정구역 범위(같은 단지 → 같은 동 → 같은 시·군·구) 최근 10건 ㎡당 중간값'
@@ -562,8 +565,10 @@ def jeonse(area, pool, umd, this_year):
 
 
 class TradeCache:
-    def __init__(self, today):
+    def __init__(self, today, geocode=None, complexes=None):
+        """geocode·complexes를 주면 시세를 v2b로 낸다(백테스트가 v2b를 채택했을 때 collect가 준다)."""
         self.today, self.codes, self.months = today, {}, {}
+        self.geocode, self.complexes = geocode, complexes
 
     def pool(self, sido, sgg, months, skip=0, kind='trade'):
         """최근 months개월(skip개월 앞부터) 실거래. kind='trade'는 매매와 분양권, 'rent'는 전월세."""
@@ -593,8 +598,23 @@ class TradeCache:
             return None
 
 
+def adopted_method():
+    """백테스트(03_notes/backtest/result.json)가 채택한 시세 방법과 그 오차 {'method', 'MdAPE', 'P80', 'N'}."""
+    res = json.loads(BACKTEST.read_text(encoding='utf-8'))
+    return res.get('adopted') or {'method': 'v1', **{k: res['v1'][k] for k in ('MdAPE', 'P80', 'N')}}
+
+
+def with_view(c, area):
+    """v1 결과에 v2b와 같은 꼴의 범위(근거 거래 ㎡당 25·75%)와 단지별 묶음을 붙인다."""
+    groups = {}
+    for t in c['trades']:
+        groups.setdefault(t['apt'], []).append(t['price'] / t['area'])
+    return {**c, 'method': 'v1', 'range': (round(c['q'][0] * area), round(c['q'][1] * area)),
+            'comps': [{'apt': a, 'n': len(v), 'per': round(statistics.median(v), 1)} for a, v in groups.items()]}
+
+
 def market_types(p, models, sido, sgg, umd, today, cache, notes):
-    """주택형마다 분양가와 v1 시세 비교, 전세 추정, 이전 6개월 대비 흐름."""
+    """주택형마다 분양가와 시세 비교(v1, cache에 좌표가 있으면 v2b), 전세 추정, 이전 6개월 대비 흐름."""
     pool, name = cache.pool(sido, sgg, 6)
     if pool is None:
         notes.append(f'법정동코드 「{name}」 미확인: 실거래 비교 불가')
@@ -635,11 +655,18 @@ def market_types(p, models, sido, sgg, umd, today, cache, notes):
     for t in types:
         c = t['cmp']
         t['jeonse'] = jeonse(t['area'], rent_pool, umd, today.year) if rent_pool is not None else None
-        if not c:
-            continue
-        old = compare(t['area'], t['price'], old_pool, umd, today.year, tier=c['tier'], name=house) \
-            if c.get('months') == 6 and not c.get('borrowed') else None
-        c['trend'] = c['per'] / old['per'] - 1 if old else None
+        if c:
+            old = compare(t['area'], t['price'], old_pool, umd, today.year, tier=c['tier'], name=house) \
+                if c.get('months') == 6 and not c.get('borrowed') else None
+            c['trend'] = c['per'] / old['per'] - 1 if old else None
+            t['cmp'] = c = with_view(c, t['area'])
+        if cache.geocode:
+            year_pool = cache.pool(sido, sgg, 12)[0]
+            b = v2.estimate(p.get('HSSPLY_ADRES', ''), t['area'], t['price'], year_pool, today.year, f'{sido} {sgg}'.strip(),
+                            cache.geocode, lookup=lambda apt, u, jibun, built: cache.complexes.lookup(cache.codes[f'{sido} {sgg}'.strip()], apt, u, jibun, built),
+                            umd=umd, households=int(p.get('TOT_SUPLY_HSHLDCO') or 0), top=v2.is_top(house, p.get('CNSTRCT_ENTRPS_NM')))
+            if b and v2.pick(c, b) is b:
+                t['cmp'] = {**b, 'trend': c['trend'] if c else None, 'v1': {k: c[k] for k in ('scope', 'market', 'rate')} if c else None}
     return types
 
 
@@ -682,23 +709,36 @@ def build(p, kind, mdl, today, cache):
     return out
 
 
-def write(path, notices, today, errors):
-    doc = {'schema': 1, 'generated_at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
-           'today': today.isoformat(), 'lookback_days': LOOKBACK_DAYS, 'market_method': MARKET_METHOD,
+def write(path, notices, today, errors, error=None):
+    """error: 채택한 시세 방법의 백테스트 오차(adopted_method). 읽는 쪽이 시세 × (1 − P80)을 등급 계산에 쓴다."""
+    error = error or adopted_method()
+    doc = {'schema': 2, 'generated_at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
+           'today': today.isoformat(), 'lookback_days': LOOKBACK_DAYS,
+           'market_method': v2.METHOD if error['method'] == 'v2b' else MARKET_METHOD, 'market_error': error,
            'notices': notices, 'errors': errors}
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding='utf-8')
 
 
 def collect(found, today, path):
-    cache, notices, errors = TradeCache(today), [], []
+    error = adopted_method()
+    geocode = v2.Geocoder() if error['method'] == 'v2b' else None
+    cache = TradeCache(today, geocode if geocode and geocode.key else None, Complexes(today=today))
+    if geocode and not geocode.key:
+        print('KAKAO_REST_API_KEY 없음: 시세를 v1로 낸다')
+    notices, errors = [], []
     for p, kind, mdl in found:
         try:
             notices.append(build(p, kind, mdl, today, cache))
         except RuntimeError as ex:
             errors.append(f"{p.get('HOUSE_NM')}: {ex}")
             print(f"{p.get('HOUSE_NM')}: 조회 실패 {ex}")
-    write(path, notices, today, errors)
+    if cache.geocode:
+        error = {**error, 'geocode_calls': geocode.calls, 'geocode_misses': geocode.misses, 'kapt_calls': cache.complexes.calls}
+    elif error['method'] == 'v2b':  # v2b를 채택했는데 좌표 키가 없으면 v1로 냈으니 v1 오차를 적는다
+        res = json.loads(BACKTEST.read_text(encoding='utf-8'))
+        error = {'method': 'v1', **{k: res['v1'][k] for k in ('MdAPE', 'P80', 'N')}}
+    write(path, notices, today, errors, error)
     print(f'공고 {len(notices)}건, 실패 {len(errors)}건 → {path.relative_to(ROOT)}')
 
 

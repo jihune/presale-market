@@ -24,6 +24,8 @@ jobs:
     timeout-minutes: 90
     env:
       DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+      # 백테스트가 v2b를 채택했을 때만 쓴다(03_notes/backtest/result.json의 adopted). 좌표는 실행 안에서만 쓰고 남기지 않는다
+      KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
