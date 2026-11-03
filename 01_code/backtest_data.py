@@ -1,7 +1,8 @@
 """백테스트용 지난 공고와 실거래를 받는다(공공데이터만).
 
-사용: python 01_code/backtest_data.py <출력 폴더>
-  <출력 폴더>/notices.json            2023-01-01 ~ 2025-06-30 영남 민영 분양 공고(임대 제외)와 주택형
+사용: python 01_code/backtest_data.py <출력 폴더> [영남|검증]
+  <출력 폴더>/notices.json            2023-01-01 ~ 2025-06-30 민영 분양 공고(임대 제외)와 주택형. 영남(기본)은 대구·경북·부산·울산·경남,
+                                      검증은 3회차의 새 검증 묶음(충청·호남·강원과 대전·세종·광주)
   <출력 폴더>/trades/<시군구코드>/<YYYYMM>.json   공고 12개월 전 ~ 18개월 뒤의 매매·분양권 실거래(오늘 이후 달은 받지 않음)
 이미 있는 파일은 다시 받지 않는다. 환경 변수 DATA_GO_KR_KEY가 있어야 한다.
 """
@@ -13,7 +14,14 @@ from pathlib import Path
 
 import presale
 
-SIDOS = ('대구광역시', '경상북도', '부산광역시', '울산광역시', '경상남도')
+REGIONS = {
+    '영남': ('대구광역시', '경상북도', '부산광역시', '울산광역시', '경상남도'),
+    # 2023 ~ 2024에 이름이 바뀐 시·도(강원도 → 강원특별자치도 2023-06-11, 전라북도 → 전북특별자치도 2024-01-18)는 옛 이름도 받는다
+    '검증': ('대전광역시', '세종특별자치시', '충청북도', '충청남도', '광주광역시', '전라남도', '전라북도', '전북특별자치도',
+           '강원도', '강원특별자치도'),
+}
+# 법정동코드 API는 지금 이름으로 찾는다
+NEW_NAMES = {'전라북도': '전북특별자치도', '강원도': '강원특별자치도'}
 SINCE, UNTIL = '2023-01-01', '2025-06-30'
 
 
@@ -23,8 +31,8 @@ def months_around(day, before=12, after=18):
     return [f'{k // 12}{k % 12 + 1:02d}' for k in range(base - before, base + after + 1)]
 
 
-def main(out):
-    out = Path(out)
+def main(out, region='영남'):
+    out, sidos = Path(out), REGIONS[region]
     today = presale.today_kst()
     path = out / 'notices.json'
     if path.exists():
@@ -34,7 +42,8 @@ def main(out):
         notices = []
         for p in rows:
             sido, sgg, umd = presale.split_address(p.get('HSSPLY_ADRES', ''), p.get('SUBSCRPT_AREA_CODE_NM', ''))
-            if sido not in SIDOS or str(p.get('RENT_SECD') or '0') != '0' or p.get('HOUSE_DTL_SECD') != '01':
+            sido = NEW_NAMES.get(sido, sido) if sido in sidos else sido
+            if sido not in sidos or str(p.get('RENT_SECD') or '0') != '0' or p.get('HOUSE_DTL_SECD') != '01':
                 continue
             models = presale.applyhome('getAPTLttotPblancMdl', {'cond[HOUSE_MANAGE_NO::EQ]': p['HOUSE_MANAGE_NO'], 'cond[PBLANC_NO::EQ]': p['PBLANC_NO']})
             notices.append({'detail': {k: v for k, v in p.items() if k not in presale.DROP_FIELDS}, 'models': models,
@@ -72,4 +81,4 @@ def main(out):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    main(*sys.argv[1:])

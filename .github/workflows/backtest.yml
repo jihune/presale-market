@@ -1,22 +1,38 @@
 name: 시세 계산 백테스트
 
-# 손으로만 돌린다. 판정 규칙은 01_code/backtest.py 머리에 있고, 결과는 03_notes/backtest/에, 새로 받은 공동주택 단지 정보는 02_data/complexes/에 커밋한다.
+# 손으로만 돌린다. 판정 규칙은 01_code/backtest.py 머리에 있고, 결과는 03_notes/backtest/(검증 묶음은 03_notes/backtest/holdout/)에,
+# 새로 받은 공동주택 단지 정보는 02_data/complexes/에 커밋한다.
 on:
   workflow_dispatch:
+    inputs:
+      region:
+        description: '영남(1 ~ 3회차 대상) 또는 검증(3회차 새 검증 묶음: 충청·호남·강원·대전·세종·광주)'
+        default: '영남'
+      data_only:
+        description: 'true면 자료만 받고 백테스트는 돌리지 않는다(검증 묶음 결과를 방법을 정하기 전에 보지 않으려고)'
+        default: 'false'
+      upload:
+        description: 'true면 받은 자료(공공데이터)를 아티팩트로 올린다(세션이 내려받아 방법을 고칠 때)'
+        default: 'false'
 
 permissions:
   contents: write
 
 concurrency:
-  group: backtest
+  group: backtest-${{ inputs.region }}
 
 jobs:
   backtest:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 330
     env:
       DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
       KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+      REGION: ${{ inputs.region }}
+      # 영남은 1·2회차와 같은 캐시(backtest-)를 이어 쓴다. 검증 묶음 캐시 이름은 backtest-로 시작하지 않게 해 섞이지 않는다
+      DIR: ${{ inputs.region == '검증' && 'bt_holdout' || 'bt' }}
+      KEY: ${{ inputs.region == '검증' && 'holdout' || 'backtest' }}
+      OUT: ${{ inputs.region == '검증' && '03_notes/backtest/holdout' || '03_notes/backtest' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,23 +43,32 @@ jobs:
       - name: 지난 공고·실거래 캐시
         uses: actions/cache@v4
         with:
-          path: bt
-          key: backtest-${{ github.run_id }}
-          restore-keys: backtest-
+          path: ${{ env.DIR }}
+          key: ${{ env.KEY }}-${{ github.run_id }}
+          restore-keys: ${{ env.KEY }}-
       - name: 시험
         run: python -m unittest discover -s 01_code
       - name: 자료 받기
-        run: python 01_code/backtest_data.py bt
+        run: python 01_code/backtest_data.py "$DIR" "$REGION"
+      - name: 자료 올리기
+        if: inputs.upload == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.KEY }}-data
+          path: ${{ env.DIR }}
+          retention-days: 3
       - name: 백테스트
-        run: python 01_code/backtest.py bt 03_notes/backtest
+        if: inputs.data_only != 'true'
+        run: python 01_code/backtest.py "$DIR" "$OUT"
       - name: 결과를 main에 저장
+        if: inputs.data_only != 'true'
         run: |
           mkdir -p 02_data/complexes
           git add 03_notes/backtest 02_data/complexes
           git diff --cached --quiet && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "data: $(date -u +%F) 백테스트 결과"
+          git commit -m "data: $(date -u +%F) 백테스트 결과($REGION)"
           for attempt in 1 2 3; do
             git pull --no-rebase --no-edit origin main && git push origin HEAD:main && exit 0
             sleep 5
