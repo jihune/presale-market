@@ -26,7 +26,7 @@ class Geocoder:
 
     def __init__(self, key=None):
         self.key = key if key is not None else os.environ.get('KAKAO_REST_API_KEY', '')
-        self.memo, self.calls, self.misses = {}, 0, 0
+        self.memo, self.calls, self.misses, self.errors = {}, 0, 0, 0
 
     def __call__(self, address):
         if not self.key or not address:
@@ -34,13 +34,19 @@ class Geocoder:
         if address not in self.memo:
             req = urllib.request.Request(f'{KAKAO}?{urllib.parse.urlencode({"query": address, "size": 1})}',
                                          headers={'Authorization': f'KakaoAK {self.key}'})
-            try:
-                with urllib.request.urlopen(req, timeout=20) as r:
-                    docs = json.loads(r.read()).get('documents') or []
-            except OSError:
-                docs = []
-            self.calls += 1
-            time.sleep(0.05)
+            for wait in (1, 5, None):  # 연결 끊김·429·5xx는 두 번 더. 실패는 기억하지 않아 다음에 같은 주소를 다시 부른다
+                self.calls += 1
+                time.sleep(0.1)
+                try:
+                    with urllib.request.urlopen(req, timeout=20) as r:
+                        docs = json.loads(r.read()).get('documents') or []
+                    break
+                except (OSError, ValueError) as ex:
+                    code = getattr(ex, 'code', None)
+                    if wait is None or (code is not None and code not in (429, 500, 502, 503, 504)):
+                        self.errors += 1
+                        return None
+                    time.sleep(wait)
             self.memo[address] = (float(docs[0]['y']), float(docs[0]['x'])) if docs else None
             self.misses += not docs
         return self.memo[address]

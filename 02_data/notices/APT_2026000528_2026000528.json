@@ -1,0 +1,28 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "주택유형": "공공분양주택 (국민주택)",
+  "해당지역": "경기도 수원시 2년 이상 계속 거주자 (2024.10.30. 이전부터 계속 거주)",
+  "기타경기": "경기도 2년 이상 계속 거주자 (2024.10.30. 이전부터 계속 거주)",
+  "규제지역여부": "경기도 2년 미만 거주자 투기과열지구 / 청약과열지역",
+  "기타지역": "및 서울특별시, 인천광역시 거주자",
+  "분양가상한제": "공공택지 적용 (대규모 택지개발지구)",
+  "재당첨제한": "10년",
+  "전매제한": "3년",
+  "거주의무기간": "5년"
+ },
+ "resale_months": 36,
+ "resale_fallback_months": 36,
+ "residence_months": 60,
+ "movein_months": 35,
+ "deposit": 0.2,
+ "deposit_found": [
+  "20"
+ ],
+ "mid_interest": null,
+ "mid_loan": true,
+ "regulated": true,
+ "region_text": "경기도 수원시 2년 이상 계속 거주자 (2024.10.30. 이전부터 계속 거주) 경기도 2년 이상 계속 거주자 (2024.10.30. 이전부터 계속 거주) 및 서울특별시, 인천광역시 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000528&pblancNo=2026000528&atchmnflSeqNo=2012074&atchmnflSn=3"
+}

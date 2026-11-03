@@ -1,0 +1,26 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "해당지역": "제주특별자치도 1년 이상 계속 거주자 (2025.10.27. 이전부터 계속 거주)",
+  "주택유형": "공공",
+  "기타지역": "제주특별자치도 1년 미만 계속 거주자",
+  "규제지역여부": "비규제지역",
+  "재당첨제한": "10년",
+  "전매제한": "10년",
+  "거주의무기간": "5년",
+  "분양가상한제": "적용",
+  "택지유형": "공공택지"
+ },
+ "resale_months": 120,
+ "resale_fallback_months": 12,
+ "residence_months": 60,
+ "movein_months": 12,
+ "deposit": null,
+ "deposit_found": [],
+ "mid_interest": null,
+ "mid_loan": false,
+ "regulated": false,
+ "region_text": "제주특별자치도 1년 이상 계속 거주자 (2025.10.27. 이전부터 계속 거주)  제주특별자치도 1년 미만 계속 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000435&pblancNo=2026000435&atchmnflSeqNo=2010016&atchmnflSn=2"
+}

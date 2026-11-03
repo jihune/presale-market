@@ -1,0 +1,29 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "해당지역": "경기도 구리시 2년 이상 계속 거주자 (2024.10.30. 이전부터 계속 거주)",
+  "기타경기": "경기도 2년 이상 계속 거주자 (2024.10.30. 이전부터 계속 거주)",
+  "기타지역": "경기도 2년 미만 거주자 및 서울특별시, 인천광역시 거주자",
+  "주택유형": "민영",
+  "규제지역여부": "투기과열지구, 청약과열지역",
+  "재당첨제한": "10년",
+  "전매제한": "3년",
+  "거주의무기간": "3년",
+  "분양가상한제": "적용",
+  "택지유형": "공공택지, 대규모택지개발지구"
+ },
+ "resale_months": 36,
+ "resale_fallback_months": 36,
+ "residence_months": 36,
+ "movein_months": 21,
+ "deposit": 0.1,
+ "deposit_found": [
+  "10"
+ ],
+ "mid_interest": "이자후불",
+ "mid_loan": true,
+ "regulated": true,
+ "region_text": "경기도 구리시 2년 이상 계속 거주자 (2024.10.30. 이전부터 계속 거주) 경기도 2년 이상 계속 거주자 (2024.10.30. 이전부터 계속 거주) 경기도 2년 미만 거주자 및 서울특별시, 인천광역시 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000472&pblancNo=2026000472&atchmnflSeqNo=2012076&atchmnflSn=4"
+}

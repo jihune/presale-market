@@ -1,0 +1,29 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "해당지역": "입주자모집공고일 현재 춘천시 6개월 이상 계속 거주자 (2026.04.30 이전부터 계속 거주)",
+  "기타지역": "입주자모집공고일 현재 춘천시 6개월 미만 거주자 및 강원특별자치도 거주자",
+  "주택유형": "민영",
+  "규제지역여부": "비규제지역",
+  "재당첨제한": "없음",
+  "전매제한": "없음",
+  "거주의무기간": "없음",
+  "분양가상한제": "미적용",
+  "택지유형": "민간택지"
+ },
+ "resale_months": 0,
+ "resale_fallback_months": 0,
+ "residence_months": 0,
+ "movein_months": 47,
+ "deposit": 0.05,
+ "deposit_found": [
+  "10",
+  "5"
+ ],
+ "mid_interest": "이자후불",
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "입주자모집공고일 현재 춘천시 6개월 이상 계속 거주자 (2026.04.30 이전부터 계속 거주)  입주자모집공고일 현재 춘천시 6개월 미만 거주자 및 강원특별자치도 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000539&pblancNo=2026000539&atchmnflSeqNo=2008482&atchmnflSn=2"
+}

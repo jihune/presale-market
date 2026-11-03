@@ -1,0 +1,29 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "해당지역": "경기도 평택시 1년 이상 계속 거주자 (2025.10.30. 이전부터 계속 거주)",
+  "기타경기": "경기도 6개월 이상 계속 거주자 (2026.04.30. 이전부터 계속 거주)",
+  "기타지역": "경기도 6개월 미만 계속 거주자 및 전국 거주자",
+  "주택유형": "민영",
+  "규제지역여부": "비규제지역",
+  "재당첨제한": "10년",
+  "전매제한": "3년",
+  "거주의무기간": "없음",
+  "분양가상한제": "적용 대규모택지개발지구",
+  "택지유형": "공공택지,"
+ },
+ "resale_months": 36,
+ "resale_fallback_months": 36,
+ "residence_months": 0,
+ "movein_months": 30,
+ "deposit": 0.1,
+ "deposit_found": [
+  "10"
+ ],
+ "mid_interest": "이자후불",
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "경기도 평택시 1년 이상 계속 거주자 (2025.10.30. 이전부터 계속 거주) 경기도 6개월 이상 계속 거주자 (2026.04.30. 이전부터 계속 거주) 경기도 6개월 미만 계속 거주자 및 전국 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000515&pblancNo=2026000515&atchmnflSeqNo=2008103&atchmnflSn=8"
+}

@@ -172,7 +172,7 @@ def main(data, out):
         rows2 = notice_rows(notices, data, lambda n, area, price: v2_of(n, area, price, data, geocode))
         write_tsv(out / 'v2-errors.tsv', rows2)
         m2 = metrics(rows2)
-        m2['geocode_calls'], m2['geocode_misses'] = geocode.calls, geocode.misses
+        m2['geocode_calls'], m2['geocode_misses'], m2['geocode_errors'] = geocode.calls, geocode.misses, geocode.errors
         m2['shuffle_share'] = shuffle_share(rows2, m2['MdAPE']) if m2['MdAPE'] is not None else None
         result['v2'] = m2
         adopt = m2['MdAPE'] is not None and m2['MdAPE'] <= m1['MdAPE'] - V2_MARGIN and m2['coverage'] >= m1['coverage'] - COVERAGE_SLACK

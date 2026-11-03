@@ -1,0 +1,18 @@
+{
+ "read": false,
+ "fetch_error": "",
+ "box": {},
+ "resale_months": null,
+ "resale_fallback_months": 6,
+ "residence_months": null,
+ "movein_months": 6,
+ "deposit": 0.2,
+ "deposit_found": [
+  "20"
+ ],
+ "mid_interest": "이자후불",
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026930043&pblancNo=2026930043&atchmnflSeqNo=2002247&atchmnflSn=4"
+}

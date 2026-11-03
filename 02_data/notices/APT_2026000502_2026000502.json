@@ -1,0 +1,29 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "해당지역": "입주자모집공고일 현재 경기도 화성시 거주자",
+  "기타지역": "입주자모집공고일 현재 수도권(경기도, 서울특별시, 인천광역시) 거주자",
+  "주택유형": "민영",
+  "규제지역여부": "비규제지역",
+  "재당첨제한": "없음",
+  "전매제한": "6개월",
+  "거주의무기간": "없음",
+  "분양가상한제": "미적용",
+  "택지유형": "민간택지"
+ },
+ "resale_months": 6,
+ "resale_fallback_months": 6,
+ "residence_months": 0,
+ "movein_months": 37,
+ "deposit": 0.05,
+ "deposit_found": [
+  "10",
+  "5"
+ ],
+ "mid_interest": "무이자",
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "입주자모집공고일 현재 경기도 화성시 거주자  입주자모집공고일 현재 수도권(경기도, 서울특별시, 인천광역시) 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000502&pblancNo=2026000502&atchmnflSeqNo=2001080&atchmnflSn=4"
+}

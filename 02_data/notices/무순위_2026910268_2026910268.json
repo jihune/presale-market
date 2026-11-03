@@ -1,0 +1,23 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "전매제한": "최초 당첨자발표일(2022.01.19.)로부터 1년간 적용되어 현재 전매제한 기간 도과 무순위(사후)",
+  "재당첨제한": "없음 최초",
+  "거주의무기간": "없음",
+  "분양가상한제": "미적용"
+ },
+ "resale_months": null,
+ "resale_fallback_months": 6,
+ "residence_months": 0,
+ "movein_months": 1,
+ "deposit": 0.1,
+ "deposit_found": [
+  "10"
+ ],
+ "mid_interest": null,
+ "mid_loan": false,
+ "regulated": false,
+ "region_text": "",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026910268&pblancNo=2026910268&atchmnflSeqNo=1998046&atchmnflSn=3"
+}
