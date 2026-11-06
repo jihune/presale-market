@@ -1,0 +1,23 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "전매제한": "최초 당첨자발표일('26.10.12.)로부터 3년간 적용(단, 3년 내 소유권이전등기 시 해제) 무순위(사후)",
+  "재당첨제한": "10년 최초",
+  "거주의무기간": "없음",
+  "분양가상한제": "미적용"
+ },
+ "resale_months": null,
+ "resale_fallback_months": 6,
+ "residence_months": 0,
+ "movein_months": 28,
+ "deposit": 0.1,
+ "deposit_found": [
+  "10"
+ ],
+ "mid_interest": null,
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026910282&pblancNo=2026910282&atchmnflSeqNo=2013002&atchmnflSn=4"
+}
