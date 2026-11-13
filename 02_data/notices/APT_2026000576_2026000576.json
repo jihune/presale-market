@@ -1,0 +1,28 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "기타지역": "입주자모집공고일 기준 경기도 및 서울특별시, 인천광역시 거주자",
+  "주택유형": "민영",
+  "해당지역": "입주자모집공고일 기준 경기도 안산시 거주자",
+  "규제지역여부": "비규제지역",
+  "재당첨제한": "없음",
+  "전매제한": "6개월",
+  "거주의무기간": "없음",
+  "분양가상한제": "미적용",
+  "택지유형": "민간택지"
+ },
+ "resale_months": 6,
+ "resale_fallback_months": 6,
+ "residence_months": 0,
+ "movein_months": 51,
+ "deposit": 0.05,
+ "deposit_found": [
+  "5"
+ ],
+ "mid_interest": "이자후불",
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "입주자모집공고일 기준 경기도 안산시 거주자  입주자모집공고일 기준 경기도 및 서울특별시, 인천광역시 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000576&pblancNo=2026000576&atchmnflSeqNo=2023060&atchmnflSn=2"
+}

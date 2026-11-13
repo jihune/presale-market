@@ -1,0 +1,23 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "재당첨제한": "없음",
+  "전매제한": "없음",
+  "거주의무기간": "없음",
+  "분양가상한제": "미적용"
+ },
+ "resale_months": 0,
+ "resale_fallback_months": 0,
+ "residence_months": 0,
+ "movein_months": 2,
+ "deposit": 0.1,
+ "deposit_found": [
+  "10"
+ ],
+ "mid_interest": null,
+ "mid_loan": false,
+ "regulated": false,
+ "region_text": "",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026910287&pblancNo=2026910287&atchmnflSeqNo=2021083&atchmnflSn=1"
+}
