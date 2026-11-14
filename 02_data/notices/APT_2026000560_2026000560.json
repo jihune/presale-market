@@ -1,0 +1,28 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "해당지역": "서울특별시 2년 이상 계속 거주자 (2024.11.13. 이전부터 계속 거주)",
+  "기타지역": "서울특별시 2년 미만 계속 거주자, 인천광역시 및 경기도 거주자",
+  "주택유형": "민영",
+  "규제지역여부": "투기과열지구/청약과열지역",
+  "재당첨제한": "10년 입주자",
+  "전매제한": "3년 특별공급",
+  "거주의무기간": "없음 일반공급 1순위 접수일",
+  "분양가상한제": "미적용 일반공급 당첨자",
+  "택지유형": "민간택지"
+ },
+ "resale_months": 36,
+ "resale_fallback_months": 36,
+ "residence_months": 0,
+ "movein_months": 39,
+ "deposit": 0.1,
+ "deposit_found": [
+  "10"
+ ],
+ "mid_interest": "이자후불",
+ "mid_loan": true,
+ "regulated": true,
+ "region_text": "서울특별시 2년 이상 계속 거주자 (2024.11.13. 이전부터 계속 거주)  서울특별시 2년 미만 계속 거주자, 인천광역시 및 경기도 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000560&pblancNo=2026000560&atchmnflSeqNo=2022113&atchmnflSn=4"
+}

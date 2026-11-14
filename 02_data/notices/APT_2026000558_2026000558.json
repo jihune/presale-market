@@ -1,0 +1,29 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "해당지역": "울산광역시 1년 이상 계속 거주자 (2025.11.13. 이전부터 계속 거주)",
+  "기타지역": "울산광역시 1년 미만 계속 거주자 및 부산광역시, 경상남도 거주자",
+  "주택유형": "민영",
+  "규제지역여부": "비규제지역",
+  "재당첨제한": "없음",
+  "전매제한": "6개월",
+  "거주의무기간": "없음",
+  "분양가상한제": "미적용",
+  "택지유형": "민간택지"
+ },
+ "resale_months": 6,
+ "resale_fallback_months": 6,
+ "residence_months": 0,
+ "movein_months": 35,
+ "deposit": 0.1,
+ "deposit_found": [
+  "10",
+  "20"
+ ],
+ "mid_interest": "무이자",
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "울산광역시 1년 이상 계속 거주자 (2025.11.13. 이전부터 계속 거주)  울산광역시 1년 미만 계속 거주자 및 부산광역시, 경상남도 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000558&pblancNo=2026000558&atchmnflSeqNo=2023062&atchmnflSn=4"
+}

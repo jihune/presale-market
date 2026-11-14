@@ -1,0 +1,28 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "주택유형": "민영",
+  "해당지역": "입주자 모집공고일 현재 부산광역시 거주자",
+  "규제지역여부": "입주자 모집공고일 현재 울산광역시, 경상남도 거주자 비규제지역",
+  "재당첨제한": "없음",
+  "전매제한": "6개월",
+  "거주의무기간": "없음",
+  "분양가상한제": "미적용",
+  "택지유형": "민간택지"
+ },
+ "resale_months": 6,
+ "resale_fallback_months": 6,
+ "residence_months": 0,
+ "movein_months": 32,
+ "deposit": 0.05,
+ "deposit_found": [
+  "10",
+  "5"
+ ],
+ "mid_interest": "무이자",
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "입주자 모집공고일 현재 부산광역시 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000566&pblancNo=2026000566&atchmnflSeqNo=2020001&atchmnflSn=3"
+}
