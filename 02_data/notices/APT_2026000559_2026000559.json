@@ -1,0 +1,28 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "해당지역": "입주자모집공고일(2026.11.18.) 현재 전북특별자치도 익산시 거주자",
+  "주택유형": "민영",
+  "기타지역": "익산시를 제외한 전북특별자치도 거주자",
+  "규제지역여부": "비규제지역",
+  "재당첨제한": "없음",
+  "전매제한": "없음",
+  "거주의무기간": "없음",
+  "분양가상한제": "미적용",
+  "택지유형": "민간택지"
+ },
+ "resale_months": 0,
+ "resale_fallback_months": 0,
+ "residence_months": 0,
+ "movein_months": 38,
+ "deposit": 0.05,
+ "deposit_found": [
+  "5"
+ ],
+ "mid_interest": "무이자",
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "입주자모집공고일(2026.11.18.) 현재 전북특별자치도 익산시 거주자  익산시를 제외한 전북특별자치도 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000559&pblancNo=2026000559&atchmnflSeqNo=2028029&atchmnflSn=2"
+}
