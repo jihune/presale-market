@@ -1,0 +1,28 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "해당지역": "기존 전라남도 광양시 6개월 이상 계속 거주자 (2026.05.20. 이전부터 계속 거주)",
+  "기타지역": "기존 전라남도 광양시 6개월 미만 거주자 및 기존 전라남도 및 기존 광주광역시 거주자",
+  "주택유형": "민영",
+  "규제지역여부": "비규제지역",
+  "재당첨제한": "없음",
+  "전매제한": "없음",
+  "거주의무기간": "없음",
+  "분양가상한제": "미적용",
+  "택지유형": "민간택지"
+ },
+ "resale_months": 0,
+ "resale_fallback_months": 0,
+ "residence_months": 0,
+ "movein_months": 20,
+ "deposit": 0.05,
+ "deposit_found": [
+  "5"
+ ],
+ "mid_interest": "무이자",
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "기존 전라남도 광양시 6개월 이상 계속 거주자 (2026.05.20. 이전부터 계속 거주)  기존 전라남도 광양시 6개월 미만 거주자 및 기존 전라남도 및 기존 광주광역시 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000590&pblancNo=2026000590&atchmnflSeqNo=2016073&atchmnflSn=3"
+}
