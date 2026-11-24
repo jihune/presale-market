@@ -1,0 +1,23 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "재당첨제한": "없음 최초",
+  "전매제한": "최초 당첨자 발표일(2024.02.27.)로부터 3년 무순위(사후)",
+  "거주의무기간": "3년",
+  "분양가상한제": "적용"
+ },
+ "resale_months": null,
+ "resale_fallback_months": 6,
+ "residence_months": 36,
+ "movein_months": 1,
+ "deposit": 0.2,
+ "deposit_found": [
+  "20"
+ ],
+ "mid_interest": null,
+ "mid_loan": false,
+ "regulated": false,
+ "region_text": "",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026910305&pblancNo=2026910305&atchmnflSeqNo=2023020&atchmnflSn=4"
+}
