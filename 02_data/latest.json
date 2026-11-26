@@ -1,7 +1,7 @@
 {
  "schema": 2,
- "generated_at": "2026-11-25T03:56:01+00:00",
- "today": "2026-11-25",
+ "generated_at": "2026-11-26T03:09:49+00:00",
+ "today": "2026-11-26",
  "lookback_days": 14,
  "market_method": "v2c: 분양가 × (1 + 예상 웃돈). 예상 웃돈의 로그 = 0.0287 + 0.098 × log(v1 주변 시세 ÷ 분양가, −0.5 ~ 0.3에서 자름)이고 주변 시세가 없으면 0.0131. 계수는 영남 2023-01-01 ~ 2025-06-30 공고의 공고 뒤 6 ~ 18개월 분양권 거래로 맞췄다. 같은 단지 거래가 있으면 v1",
  "market_error": {
@@ -1033,8 +1033,8 @@
      "first": 1,
      "supply": 81.1004,
      "jeonse": {
-      "deposit": 44463,
-      "n": 35,
+      "deposit": 44474,
+      "n": 36,
       "scope": "같은 시·군·구"
      }
     },
@@ -1066,8 +1066,8 @@
      "first": 0,
      "supply": 81.0979,
      "jeonse": {
-      "deposit": 44452,
-      "n": 35,
+      "deposit": 44463,
+      "n": 36,
       "scope": "같은 시·군·구"
      }
     },
@@ -1099,8 +1099,8 @@
      "first": 0,
      "supply": 80.9618,
      "jeonse": {
-      "deposit": 44379,
-      "n": 35,
+      "deposit": 44390,
+      "n": 36,
       "scope": "같은 시·군·구"
      }
     },
@@ -2173,8 +2173,8 @@
      "first": 3,
      "supply": 79.7293,
      "jeonse": {
-      "deposit": 43914,
-      "n": 51,
+      "deposit": 43491,
+      "n": 52,
       "scope": "같은 시·군·구"
      }
     },
@@ -2240,7 +2240,7 @@
      "supply": 106.6083,
      "jeonse": {
       "deposit": 64988,
-      "n": 117,
+      "n": 119,
       "scope": "같은 시·군·구"
      }
     }
@@ -2936,7 +2936,7 @@
    "sido": "전북특별자치도",
    "sigungu": "익산시",
    "umd": "동산동",
-   "closed": false,
+   "closed": true,
    "rent": false,
    "notes": [],
    "types": [
@@ -3222,7 +3222,7 @@
    "sido": "경상북도",
    "sigungu": "구미시",
    "umd": "도량동",
-   "closed": false,
+   "closed": true,
    "rent": false,
    "notes": [],
    "types": [
@@ -3556,7 +3556,7 @@
    "sido": "부산광역시",
    "sigungu": "동구",
    "umd": "초량3동",
-   "closed": false,
+   "closed": true,
    "rent": false,
    "notes": [],
    "types": [
@@ -3588,8 +3588,8 @@
      "first": 4,
      "supply": 82.4368,
      "jeonse": {
-      "deposit": 31507,
-      "n": 10,
+      "deposit": 31980,
+      "n": 11,
       "scope": "같은 시·군·구"
      }
     },
@@ -3621,8 +3621,8 @@
      "first": 3,
      "supply": 82.2479,
      "jeonse": {
-      "deposit": 31533,
-      "n": 10,
+      "deposit": 32006,
+      "n": 11,
       "scope": "같은 시·군·구"
      }
     },
@@ -3654,8 +3654,8 @@
      "first": 2,
      "supply": 96.6802,
      "jeonse": {
-      "deposit": 32844,
-      "n": 28,
+      "deposit": 32837,
+      "n": 29,
       "scope": "같은 시·군·구"
      }
     },
@@ -3837,7 +3837,7 @@
    "sido": "부산광역시",
    "sigungu": "남구",
    "umd": "문현동",
-   "closed": false,
+   "closed": true,
    "rent": false,
    "notes": [],
    "types": [
@@ -4391,7 +4391,7 @@
    "sido": "울산광역시",
    "sigungu": "동구",
    "umd": "화정동",
-   "closed": false,
+   "closed": true,
    "rent": false,
    "notes": [],
    "types": [
@@ -4423,8 +4423,8 @@
      "first": 5,
      "supply": 81.5717,
      "jeonse": {
-      "deposit": 36997,
-      "n": 9,
+      "deposit": 36496,
+      "n": 10,
       "scope": "같은 시·군·구"
      }
     },
@@ -4434,22 +4434,22 @@
      "price": 56690,
      "cmp": {
       "method": "v2c",
-      "per": 684.404390508913,
-      "market": 58173,
-      "gain": 1483,
-      "rate": 0.026159816546128065,
-      "scope": "분양가 × 예상 웃돈 +2.6%(주변 시세 ÷ 분양가 -3%)",
+      "per": 685.9127464925522,
+      "market": 58301,
+      "gain": 1611,
+      "rate": 0.028417710354559887,
+      "scope": "분양가 × 예상 웃돈 +2.8%(주변 시세 ÷ 분양가 -1%)",
       "range": [
-       53970,
-       60041
+       54089,
+       60173
       ],
-      "gap": -0.02935125916336795,
+      "gap": -0.006887271245946875,
       "v1": {
        "scope": "같은 시·군·구, 5년 이내 단지",
-       "market": 55050,
-       "rate": -0.028929264420532723
+       "market": 56301,
+       "rate": -0.0068618804021873345
       },
-      "trend": -0.018716577540106805
+      "trend": 0.003576418735344644
      },
      "gen": 191,
      "total": 487,
@@ -4467,22 +4467,22 @@
      "price": 55830,
      "cmp": {
       "method": "v2c",
-      "per": 675.0853277691973,
-      "market": 57376,
-      "gain": 1546,
-      "rate": 0.0276912054451012,
-      "scope": "분양가 × 예상 웃돈 +2.8%(주변 시세 ÷ 분양가 -1%)",
+      "per": 676.5731455093064,
+      "market": 57502,
+      "gain": 1672,
+      "rate": 0.029948056600394055,
+      "scope": "분양가 × 예상 웃돈 +3.0%(주변 시세 ÷ 분양가 +1%)",
       "range": [
-       53230,
-       59218
+       53347,
+       59348
       ],
-      "gap": -0.014151854811462914,
+      "gap": 0.008312133105958268,
       "v1": {
        "scope": "같은 시·군·구, 5년 이내 단지",
-       "market": 55045,
-       "rate": -0.014060540927816586
+       "market": 56296,
+       "rate": 0.008346766971162458
       },
-      "trend": -0.018716577540106805
+      "trend": 0.003576418735344644
      },
      "gen": 16,
      "total": 48,
@@ -4500,22 +4500,22 @@
      "price": 56690,
      "cmp": {
       "method": "v2c",
-      "per": 684.3971276809255,
-      "market": 58173,
-      "gain": 1483,
-      "rate": 0.026159816546128065,
-      "scope": "분양가 × 예상 웃돈 +2.6%(주변 시세 ÷ 분양가 -3%)",
+      "per": 685.9054676580482,
+      "market": 58301,
+      "gain": 1611,
+      "rate": 0.028417710354559887,
+      "scope": "분양가 × 예상 웃돈 +2.8%(주변 시세 ÷ 분양가 -1%)",
       "range": [
-       53970,
-       60041
+       54089,
+       60173
       ],
-      "gap": -0.02933949424986934,
+      "gap": -0.006875506332448223,
       "v1": {
        "scope": "같은 시·군·구, 5년 이내 단지",
-       "market": 55051,
-       "rate": -0.02891162462515435
+       "market": 56302,
+       "rate": -0.006844240606808961
       },
-      "trend": -0.018716577540106805
+      "trend": 0.003576418735344644
      },
      "gen": 15,
      "total": 45,
@@ -4723,7 +4723,7 @@
    "sido": "충청남도",
    "sigungu": "논산시 내동3지구",
    "umd": "",
-   "closed": false,
+   "closed": true,
    "rent": false,
    "notes": [
     "법정동코드 「충청남도 논산시 내동3지구」 미확인: 실거래 비교 불가"
@@ -5211,7 +5211,7 @@
    "sido": "경기도",
    "sigungu": "안산시 상록구",
    "umd": "성포동",
-   "closed": false,
+   "closed": true,
    "rent": false,
    "notes": [],
    "types": [
@@ -5560,7 +5560,7 @@
    "sido": "경기도",
    "sigungu": "부천시 오정구",
    "umd": "",
-   "closed": false,
+   "closed": true,
    "rent": false,
    "notes": [],
    "types": [
@@ -5754,6 +5754,238 @@
     "regulated": false,
     "region_text": "경기도 부천시 1년 이상 계속 거주자 (2025.11.12. 이전부터 계속 거주) 경기도 6개월 이상 계속 거주자 (2026.05.12. 이전부터 계속 거주) 경기도 6개월 미만 거주자 및 서울특별시, 인천광역시 거주자",
     "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000457&pblancNo=2026000457&atchmnflSeqNo=2023090&atchmnflSn=3"
+   }
+  },
+  {
+   "key": "무순위:2026910294:2026910294",
+   "kind": "무순위",
+   "detail": {
+    "BSNS_MBY_NM": "유한회사 에이치엠서빈",
+    "CNTRCT_CNCLS_BGNDE": "2026-12-04",
+    "CNTRCT_CNCLS_ENDDE": "2026-12-04",
+    "GNRL_RCEPT_BGNDE": null,
+    "GNRL_RCEPT_ENDDE": null,
+    "HMPG_ADRES": "https://brand.hldni.com/thewaycity/",
+    "HOUSE_MANAGE_NO": "2026910294",
+    "HOUSE_NM": "신분평 에피트 더웨이시티",
+    "HOUSE_SECD": "04",
+    "HOUSE_SECD_NM": "무순위",
+    "HSSPLY_ADRES": "충청북도 청주시 서원구 장성동 135번지 일원(장성지구 A2블럭)",
+    "HSSPLY_ZIP": "28804",
+    "MVN_PREARNGE_YM": "202909",
+    "NSPRC_NM": null,
+    "PBLANC_NO": "2026910294",
+    "PBLANC_URL": "https://www.applyhome.co.kr/ai/aia/selectAPTRemndrLttotPblancDetailView.do?houseManageNo=2026910294&pblancNo=2026910294",
+    "PRZWNER_PRESNATN_DE": "2026-12-03",
+    "RCRIT_PBLANC_DE": "2026-11-25",
+    "SPSPLY_RCEPT_BGNDE": null,
+    "SPSPLY_RCEPT_ENDDE": null,
+    "SUBSCRPT_AREA_CODE": "360",
+    "SUBSCRPT_AREA_CODE_NM": "충북",
+    "SUBSCRPT_RCEPT_BGNDE": "2026-11-30",
+    "SUBSCRPT_RCEPT_ENDDE": "2026-11-30",
+    "TOT_SUPLY_HSHLDCO": 395
+   },
+   "models": [
+    {
+     "HOUSE_MANAGE_NO": "2026910294",
+     "HOUSE_TY": "059.9960B",
+     "LTTOT_TOP_AMOUNT": "39290",
+     "MODEL_NO": "01",
+     "PBLANC_NO": "2026910294",
+     "SPSPLY_HSHLDCO": 0,
+     "SUPLY_AR": null,
+     "SUPLY_HSHLDCO": 24
+    },
+    {
+     "HOUSE_MANAGE_NO": "2026910294",
+     "HOUSE_TY": "075.7230A",
+     "LTTOT_TOP_AMOUNT": "46090",
+     "MODEL_NO": "02",
+     "PBLANC_NO": "2026910294",
+     "SPSPLY_HSHLDCO": 0,
+     "SUPLY_AR": null,
+     "SUPLY_HSHLDCO": 41
+    },
+    {
+     "HOUSE_MANAGE_NO": "2026910294",
+     "HOUSE_TY": "084.9568A",
+     "LTTOT_TOP_AMOUNT": "50090",
+     "MODEL_NO": "03",
+     "PBLANC_NO": "2026910294",
+     "SPSPLY_HSHLDCO": 0,
+     "SUPLY_AR": null,
+     "SUPLY_HSHLDCO": 254
+    },
+    {
+     "HOUSE_MANAGE_NO": "2026910294",
+     "HOUSE_TY": "112.8127 ",
+     "LTTOT_TOP_AMOUNT": "65890",
+     "MODEL_NO": "04",
+     "PBLANC_NO": "2026910294",
+     "SPSPLY_HSHLDCO": 0,
+     "SUPLY_AR": null,
+     "SUPLY_HSHLDCO": 76
+    }
+   ],
+   "sido": "충청북도",
+   "sigungu": "청주시 서원구",
+   "umd": "장성동",
+   "closed": false,
+   "rent": false,
+   "notes": [],
+   "types": [
+    {
+     "ty": "059.9960B",
+     "area": 59.996,
+     "price": 39290,
+     "cmp": {
+      "method": "v2c",
+      "per": 666.6489275478887,
+      "market": 39996,
+      "gain": 706,
+      "rate": 0.017968948841944516,
+      "scope": "분양가 × 예상 웃돈 +1.8%(주변 시세 ÷ 분양가 -11%)",
+      "range": [
+       37106,
+       41280
+      ],
+      "gap": -0.11105976915922261,
+      "v1": {
+       "scope": "같은 읍·면·동 분양권·입주권(다른 주택형 평단 적용)",
+       "market": 35160,
+       "rate": -0.10511580554848562
+      },
+      "trend": null
+     },
+     "gen": 24,
+     "total": 24,
+     "first": 0,
+     "supply": 0.0,
+     "jeonse": {
+      "deposit": 22508,
+      "n": 3,
+      "scope": "같은 시·군·구"
+     }
+    },
+    {
+     "ty": "075.7230A",
+     "area": 75.723,
+     "price": 46090,
+     "cmp": {
+      "method": "v2c",
+      "per": 624.0665010229237,
+      "market": 47256,
+      "gain": 1166,
+      "rate": 0.025298329355608593,
+      "scope": "분양가 × 예상 웃돈 +2.5%(주변 시세 ÷ 분양가 -4%)",
+      "range": [
+       43842,
+       48773
+      ],
+      "gap": -0.037881690446752596,
+      "v1": {
+       "scope": "같은 읍·면·동 분양권·입주권(다른 주택형 평단 적용)",
+       "market": 44377,
+       "rate": -0.03716641353872858
+      },
+      "trend": null
+     },
+     "gen": 41,
+     "total": 41,
+     "first": 0,
+     "supply": 0.0,
+     "jeonse": {
+      "deposit": 29876,
+      "n": 13,
+      "scope": "같은 시·군·구"
+     }
+    },
+    {
+     "ty": "084.9568A",
+     "area": 84.9568,
+     "price": 50090,
+     "cmp": {
+      "method": "v2c",
+      "per": 606.4008609928933,
+      "market": 51518,
+      "gain": 1428,
+      "rate": 0.028508684368137353,
+      "scope": "분양가 × 예상 웃돈 +2.9%(주변 시세 ÷ 분양가 -1%)",
+      "range": [
+       47795,
+       53172
+      ],
+      "gap": -0.006046124290627222,
+      "v1": {
+       "scope": "같은 읍·면·동 분양권·입주권",
+       "market": 49788,
+       "rate": -0.0060291475344380115
+      },
+      "trend": -0.005229987226221922
+     },
+     "gen": 254,
+     "total": 254,
+     "first": 0,
+     "supply": 0.0,
+     "jeonse": {
+      "deposit": 35310,
+      "n": 25,
+      "scope": "같은 시·군·구"
+     }
+    },
+    {
+     "ty": "112.8127 ",
+     "area": 112.8127,
+     "price": 65890,
+     "cmp": {
+      "method": "v2c",
+      "per": 601.2698010801362,
+      "market": 67831,
+      "gain": 1941,
+      "rate": 0.02945818788890575,
+      "scope": "분양가 × 예상 웃돈 +2.9%(주변 시세 ÷ 분양가 +0%)",
+      "range": [
+       62930,
+       70009
+      ],
+      "gap": 0.003374607531118465,
+      "v1": {
+       "scope": "같은 읍·면·동 분양권·입주권(다른 주택형 평단 적용)",
+       "market": 66113,
+       "rate": 0.0033844285931097285
+      },
+      "trend": null
+     },
+     "gen": 76,
+     "total": 76,
+     "first": 0,
+     "supply": 0.0,
+     "jeonse": null
+    }
+   ],
+   "notice": {
+    "read": true,
+    "fetch_error": "",
+    "box": {
+     "재당첨제한": "없음 최초",
+     "전매제한": "없음 무순위(사후)",
+     "거주의무기간": "없음 무순위(사후) 당첨자",
+     "분양가상한제": "미적용 서류 접수"
+    },
+    "resale_months": 0,
+    "resale_fallback_months": 0,
+    "residence_months": 0,
+    "movein_months": 33,
+    "deposit": 0.1,
+    "deposit_found": [
+     "10"
+    ],
+    "mid_interest": null,
+    "mid_loan": false,
+    "regulated": false,
+    "region_text": "",
+    "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026910294&pblancNo=2026910294&atchmnflSeqNo=2031995&atchmnflSn=3"
    }
   },
   {
@@ -7220,7 +7452,7 @@
    "sido": "부산광역시",
    "sigungu": "수영구",
    "umd": "광안동",
-   "closed": false,
+   "closed": true,
    "rent": false,
    "notes": [],
    "types": [
@@ -7562,7 +7794,7 @@
    "sido": "전남광주통합특별시",
    "sigungu": "광산구",
    "umd": "하산동",
-   "closed": false,
+   "closed": true,
    "rent": false,
    "notes": [],
    "types": [
@@ -8856,8 +9088,8 @@
      "first": 0,
      "supply": 68.98,
      "jeonse": {
-      "deposit": 49592,
-      "n": 3,
+      "deposit": 54930,
+      "n": 4,
       "scope": "같은 시·군·구"
      }
     },
@@ -9476,7 +9708,7 @@
      "supply": 0.0,
      "jeonse": {
       "deposit": 33069,
-      "n": 59,
+      "n": 60,
       "scope": "같은 시·군·구"
      }
     },
@@ -9896,899 +10128,6 @@
     "regulated": false,
     "region_text": "",
     "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026910287&pblancNo=2026910287&atchmnflSeqNo=2021083&atchmnflSn=1"
-   }
-  },
-  {
-   "key": "무순위:2026910297:2026910297",
-   "kind": "무순위",
-   "detail": {
-    "BSNS_MBY_NM": "(주)덕원이앤씨",
-    "CNTRCT_CNCLS_BGNDE": "2026-11-26",
-    "CNTRCT_CNCLS_ENDDE": "2026-11-26",
-    "GNRL_RCEPT_BGNDE": null,
-    "GNRL_RCEPT_ENDDE": null,
-    "HMPG_ADRES": "http://평택고덕대광로제비앙모아엘가.com",
-    "HOUSE_MANAGE_NO": "2026910297",
-    "HOUSE_NM": "평택 고덕 국제신도시 A-55 대광로제비앙 모아엘가(4차)",
-    "HOUSE_SECD": "04",
-    "HOUSE_SECD_NM": "무순위",
-    "HSSPLY_ADRES": "경기도 평택시 고덕국제8로 10(고덕동 2705-1)",
-    "HSSPLY_ZIP": "18016",
-    "MVN_PREARNGE_YM": "202702",
-    "NSPRC_NM": null,
-    "PBLANC_NO": "2026910297",
-    "PBLANC_URL": "https://www.applyhome.co.kr/ai/aia/selectAPTRemndrLttotPblancDetailView.do?houseManageNo=2026910297&pblancNo=2026910297",
-    "PRZWNER_PRESNATN_DE": "2026-11-19",
-    "RCRIT_PBLANC_DE": "2026-11-11",
-    "SPSPLY_RCEPT_BGNDE": null,
-    "SPSPLY_RCEPT_ENDDE": null,
-    "SUBSCRPT_AREA_CODE": "410",
-    "SUBSCRPT_AREA_CODE_NM": "경기",
-    "SUBSCRPT_RCEPT_BGNDE": "2026-11-16",
-    "SUBSCRPT_RCEPT_ENDDE": "2026-11-16",
-    "TOT_SUPLY_HSHLDCO": 3
-   },
-   "models": [
-    {
-     "HOUSE_MANAGE_NO": "2026910297",
-     "HOUSE_TY": "084.9452A",
-     "LTTOT_TOP_AMOUNT": "50600",
-     "MODEL_NO": "01",
-     "PBLANC_NO": "2026910297",
-     "SPSPLY_HSHLDCO": 0,
-     "SUPLY_AR": null,
-     "SUPLY_HSHLDCO": 2
-    },
-    {
-     "HOUSE_MANAGE_NO": "2026910297",
-     "HOUSE_TY": "084.9704B",
-     "LTTOT_TOP_AMOUNT": "50600",
-     "MODEL_NO": "02",
-     "PBLANC_NO": "2026910297",
-     "SPSPLY_HSHLDCO": 0,
-     "SUPLY_AR": null,
-     "SUPLY_HSHLDCO": 1
-    }
-   ],
-   "sido": "경기도",
-   "sigungu": "평택시",
-   "umd": "",
-   "closed": true,
-   "rent": false,
-   "notes": [],
-   "types": [
-    {
-     "ty": "084.9452A",
-     "area": 84.9452,
-     "price": 50600,
-     "cmp": {
-      "method": "v2c",
-      "per": 605.8161571882714,
-      "market": 51461,
-      "gain": 861,
-      "rate": 0.01701581027667984,
-      "scope": "분양가 × 예상 웃돈 +1.7%(주변 시세 ÷ 분양가 -11%)",
-      "range": [
-       47743,
-       53113
-      ],
-      "gap": -0.12065248482873481,
-      "v1": {
-       "scope": "같은 시·군·구 분양권·입주권",
-       "market": 44849,
-       "rate": -0.11365612648221343
-      },
-      "trend": 0.051357358889736915
-     },
-     "gen": 2,
-     "total": 2,
-     "first": 0,
-     "supply": 0.0,
-     "jeonse": {
-      "deposit": 29987,
-      "n": 396,
-      "scope": "같은 시·군·구"
-     }
-    },
-    {
-     "ty": "084.9704B",
-     "area": 84.9704,
-     "price": 50600,
-     "cmp": {
-      "method": "v2c",
-      "per": 605.6540931787481,
-      "market": 51463,
-      "gain": 863,
-      "rate": 0.017055335968379447,
-      "scope": "분양가 × 예상 웃돈 +1.7%(주변 시세 ÷ 분양가 -11%)",
-      "range": [
-       47744,
-       53115
-      ],
-      "gap": -0.12035586697628621,
-      "v1": {
-       "scope": "같은 시·군·구 분양권·입주권",
-       "market": 44862,
-       "rate": -0.11339920948616601
-      },
-      "trend": 0.051357358889736915
-     },
-     "gen": 1,
-     "total": 1,
-     "first": 0,
-     "supply": 0.0,
-     "jeonse": {
-      "deposit": 29995,
-      "n": 396,
-      "scope": "같은 시·군·구"
-     }
-    }
-   ],
-   "notice": {
-    "read": true,
-    "fetch_error": "",
-    "box": {
-     "전매제한": "최초 당첨자발표일(2022.11.23.)로부터 3년간 적용되어 현재 전매제한기간 도과 무순위(사후)",
-     "재당첨제한": "없음 최초",
-     "거주의무기간": "3년",
-     "분양가상한제": "적용"
-    },
-    "resale_months": null,
-    "resale_fallback_months": 6,
-    "residence_months": 36,
-    "movein_months": 3,
-    "deposit": 0.1,
-    "deposit_found": [
-     "10"
-    ],
-    "mid_interest": null,
-    "mid_loan": false,
-    "regulated": false,
-    "region_text": "",
-    "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026910297&pblancNo=2026910297&atchmnflSeqNo=2021002&atchmnflSn=3"
-   }
-  },
-  {
-   "key": "무순위:2026910293:2026910293",
-   "kind": "무순위",
-   "detail": {
-    "BSNS_MBY_NM": "교보자산신탁(주)",
-    "CNTRCT_CNCLS_BGNDE": "2026-11-26",
-    "CNTRCT_CNCLS_ENDDE": "2026-11-26",
-    "GNRL_RCEPT_BGNDE": null,
-    "GNRL_RCEPT_ENDDE": null,
-    "HMPG_ADRES": "https://xi.co.kr/irc",
-    "HOUSE_MANAGE_NO": "2026910293",
-    "HOUSE_NM": "이천자이 더 리체",
-    "HOUSE_SECD": "04",
-    "HOUSE_SECD_NM": "무순위",
-    "HSSPLY_ADRES": "경기도 이천시 증포동 502번지",
-    "HSSPLY_ZIP": "17346",
-    "MVN_PREARNGE_YM": "202611",
-    "NSPRC_NM": null,
-    "PBLANC_NO": "2026910293",
-    "PBLANC_URL": "https://www.applyhome.co.kr/ai/aia/selectAPTRemndrLttotPblancDetailView.do?houseManageNo=2026910293&pblancNo=2026910293",
-    "PRZWNER_PRESNATN_DE": "2026-11-19",
-    "RCRIT_PBLANC_DE": "2026-11-11",
-    "SPSPLY_RCEPT_BGNDE": null,
-    "SPSPLY_RCEPT_ENDDE": null,
-    "SUBSCRPT_AREA_CODE": "410",
-    "SUBSCRPT_AREA_CODE_NM": "경기",
-    "SUBSCRPT_RCEPT_BGNDE": "2026-11-16",
-    "SUBSCRPT_RCEPT_ENDDE": "2026-11-16",
-    "TOT_SUPLY_HSHLDCO": 3
-   },
-   "models": [
-    {
-     "HOUSE_MANAGE_NO": "2026910293",
-     "HOUSE_TY": "084.9400B",
-     "LTTOT_TOP_AMOUNT": "49290",
-     "MODEL_NO": "01",
-     "PBLANC_NO": "2026910293",
-     "SPSPLY_HSHLDCO": 0,
-     "SUPLY_AR": null,
-     "SUPLY_HSHLDCO": 1
-    },
-    {
-     "HOUSE_MANAGE_NO": "2026910293",
-     "HOUSE_TY": "084.9400C",
-     "LTTOT_TOP_AMOUNT": "51390",
-     "MODEL_NO": "02",
-     "PBLANC_NO": "2026910293",
-     "SPSPLY_HSHLDCO": 0,
-     "SUPLY_AR": null,
-     "SUPLY_HSHLDCO": 1
-    },
-    {
-     "HOUSE_MANAGE_NO": "2026910293",
-     "HOUSE_TY": "120.5800 ",
-     "LTTOT_TOP_AMOUNT": "69700",
-     "MODEL_NO": "03",
-     "PBLANC_NO": "2026910293",
-     "SPSPLY_HSHLDCO": 0,
-     "SUPLY_AR": null,
-     "SUPLY_HSHLDCO": 1
-    }
-   ],
-   "sido": "경기도",
-   "sigungu": "이천시",
-   "umd": "증포동",
-   "closed": true,
-   "rent": false,
-   "notes": [],
-   "types": [
-    {
-     "ty": "084.9400B",
-     "area": 84.94,
-     "price": 49290,
-     "cmp": {
-      "scope": "같은 단지",
-      "trades": [
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 54650,
-        "floor": "17",
-        "built": 2026,
-        "kind": "매매",
-        "date": "2026-10-05"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 55014,
-        "floor": "19",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-10-01"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 50490,
-        "floor": "20",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-19"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 55096,
-        "floor": "3",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-16"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.91,
-        "price": 50665,
-        "floor": "21",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-15"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.91,
-        "price": 45185,
-        "floor": "3",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-14"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 51583,
-        "floor": "21",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-13"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 49465,
-        "floor": "11",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-08"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.91,
-        "price": 51972,
-        "floor": "4",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-08"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 50068,
-        "floor": "5",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-02"
-       }
-      ],
-      "tier": 0,
-      "q": [
-       587.6765952437015,
-       644.4666823640216
-      ],
-      "per": 601.9890553238034,
-      "market": 51133,
-      "gain": 1843,
-      "rate": 0.037390951511462774,
-      "months": 6,
-      "trend": -0.029336506238515025,
-      "method": "v1",
-      "range": [
-       49917,
-       54741
-      ],
-      "comps": [
-       {
-        "apt": "이천자이더리체",
-        "n": 10,
-        "per": 602.0
-       }
-      ]
-     },
-     "gen": 1,
-     "total": 1,
-     "first": 0,
-     "supply": 0.0,
-     "jeonse": {
-      "deposit": 31500,
-      "n": 6,
-      "scope": "같은 읍·면·동"
-     }
-    },
-    {
-     "ty": "084.9400C",
-     "area": 84.94,
-     "price": 51390,
-     "cmp": {
-      "scope": "같은 단지",
-      "trades": [
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 54650,
-        "floor": "17",
-        "built": 2026,
-        "kind": "매매",
-        "date": "2026-10-05"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 55014,
-        "floor": "19",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-10-01"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 50490,
-        "floor": "20",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-19"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 55096,
-        "floor": "3",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-16"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.91,
-        "price": 50665,
-        "floor": "21",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-15"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.91,
-        "price": 45185,
-        "floor": "3",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-14"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 51583,
-        "floor": "21",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-13"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 49465,
-        "floor": "11",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-08"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.91,
-        "price": 51972,
-        "floor": "4",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-08"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 84.94,
-        "price": 50068,
-        "floor": "5",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-02"
-       }
-      ],
-      "tier": 0,
-      "q": [
-       587.6765952437015,
-       644.4666823640216
-      ],
-      "per": 601.9890553238034,
-      "market": 51133,
-      "gain": -257,
-      "rate": -0.005000972951936174,
-      "months": 6,
-      "trend": -0.029336506238515025,
-      "method": "v1",
-      "range": [
-       49917,
-       54741
-      ],
-      "comps": [
-       {
-        "apt": "이천자이더리체",
-        "n": 10,
-        "per": 602.0
-       }
-      ]
-     },
-     "gen": 1,
-     "total": 1,
-     "first": 0,
-     "supply": 0.0,
-     "jeonse": {
-      "deposit": 31500,
-      "n": 6,
-      "scope": "같은 읍·면·동"
-     }
-    },
-    {
-     "ty": "120.5800 ",
-     "area": 120.58,
-     "price": 69700,
-     "cmp": {
-      "scope": "같은 단지",
-      "trades": [
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 120.58,
-        "price": 73595,
-        "floor": "14",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-20"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 120.58,
-        "price": 80500,
-        "floor": "15",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-18"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 120.58,
-        "price": 79898,
-        "floor": "10",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-17"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 120.58,
-        "price": 75231,
-        "floor": "23",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-07"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 120.58,
-        "price": 81820,
-        "floor": "11",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-09-01"
-       },
-       {
-        "apt": "이천자이더리체",
-        "umd": "증포동",
-        "jibun": "502",
-        "area": 120.58,
-        "price": 80420,
-        "floor": "22",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-08-26"
-       },
-       {
-        "apt": "이천자이 더 리체",
-        "umd": "증포동",
-        "jibun": "323-20",
-        "area": 120.58,
-        "price": 77091,
-        "floor": "13",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-07-06"
-       },
-       {
-        "apt": "이천자이 더 리체",
-        "umd": "증포동",
-        "jibun": "323-20",
-        "area": 120.58,
-        "price": 79363,
-        "floor": "19",
-        "built": 2026,
-        "kind": "분양권",
-        "date": "2026-06-02"
-       }
-      ],
-      "tier": 0,
-      "q": [
-       627.7657986399071,
-       667.4407032675402
-      ],
-      "per": 660.3955879913751,
-      "market": 79631,
-      "gain": 9931,
-      "rate": 0.14248206599713056,
-      "months": 6,
-      "trend": 0.04482772194085105,
-      "method": "v1",
-      "range": [
-       75696,
-       80480
-      ],
-      "comps": [
-       {
-        "apt": "이천자이더리체",
-        "n": 6,
-        "per": 664.8
-       },
-       {
-        "apt": "이천자이 더 리체",
-        "n": 2,
-        "per": 648.8
-       }
-      ]
-     },
-     "gen": 1,
-     "total": 1,
-     "first": 0,
-     "supply": 0.0,
-     "jeonse": null
-    }
-   ],
-   "notice": {
-    "read": true,
-    "fetch_error": "",
-    "box": {
-     "전매제한": "최초 당첨자 발표일(2023.11.08.)로부터 1년간 적용되어 현재 전매제한기간 도과 무순위(사후)",
-     "재당첨제한": "없음 최초",
-     "거주의무기간": "없음",
-     "분양가상한제": "미적용"
-    },
-    "resale_months": null,
-    "resale_fallback_months": 6,
-    "residence_months": 0,
-    "movein_months": 0,
-    "deposit": 0.1,
-    "deposit_found": [
-     "10"
-    ],
-    "mid_interest": null,
-    "mid_loan": false,
-    "regulated": false,
-    "region_text": "",
-    "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026910293&pblancNo=2026910293&atchmnflSeqNo=2019012&atchmnflSn=4"
-   }
-  },
-  {
-   "key": "무순위:2026910291:2026910291",
-   "kind": "무순위",
-   "detail": {
-    "BSNS_MBY_NM": "주식회사 무궁화신탁",
-    "CNTRCT_CNCLS_BGNDE": "2026-11-24",
-    "CNTRCT_CNCLS_ENDDE": "2026-11-24",
-    "GNRL_RCEPT_BGNDE": null,
-    "GNRL_RCEPT_ENDDE": null,
-    "HMPG_ADRES": "https://xi.co.kr/sd2",
-    "HOUSE_MANAGE_NO": "2026910291",
-    "HOUSE_NM": "송도자이 더 스타(3차)",
-    "HOUSE_SECD": "04",
-    "HOUSE_SECD_NM": "무순위",
-    "HSSPLY_ADRES": "인천광역시 연수구 송도동 396-11 (A17블록)",
-    "HSSPLY_ZIP": "22009",
-    "MVN_PREARNGE_YM": "202703",
-    "NSPRC_NM": null,
-    "PBLANC_NO": "2026910291",
-    "PBLANC_URL": "https://www.applyhome.co.kr/ai/aia/selectAPTRemndrLttotPblancDetailView.do?houseManageNo=2026910291&pblancNo=2026910291",
-    "PRZWNER_PRESNATN_DE": "2026-11-19",
-    "RCRIT_PBLANC_DE": "2026-11-11",
-    "SPSPLY_RCEPT_BGNDE": null,
-    "SPSPLY_RCEPT_ENDDE": null,
-    "SUBSCRPT_AREA_CODE": "400",
-    "SUBSCRPT_AREA_CODE_NM": "인천",
-    "SUBSCRPT_RCEPT_BGNDE": "2026-11-16",
-    "SUBSCRPT_RCEPT_ENDDE": "2026-11-16",
-    "TOT_SUPLY_HSHLDCO": 1
-   },
-   "models": [
-    {
-     "HOUSE_MANAGE_NO": "2026910291",
-     "HOUSE_TY": "151.3362P",
-     "LTTOT_TOP_AMOUNT": "237890",
-     "MODEL_NO": "01",
-     "PBLANC_NO": "2026910291",
-     "SPSPLY_HSHLDCO": 0,
-     "SUPLY_AR": null,
-     "SUPLY_HSHLDCO": 1
-    }
-   ],
-   "sido": "인천광역시",
-   "sigungu": "연수구",
-   "umd": "송도동",
-   "closed": true,
-   "rent": false,
-   "notes": [],
-   "types": [
-    {
-     "ty": "151.3362P",
-     "area": 151.3362,
-     "price": 237890,
-     "cmp": {
-      "method": "v2c",
-      "per": 1540.3420929444028,
-      "market": 233110,
-      "gain": -4780,
-      "rate": -0.020093320442221195,
-      "scope": "분양가 × 예상 웃돈 -2.0%(주변 시세 ÷ 분양가 -39%)",
-      "range": [
-       216266,
-       240593
-      ],
-      "gap": -0.5,
-      "v1": {
-       "scope": "같은 읍·면·동, 연식 무관",
-       "market": 89959,
-       "rate": -0.6218462314515112
-      },
-      "trend": -0.25293861833349285
-     },
-     "gen": 1,
-     "total": 1,
-     "first": 0,
-     "supply": 0.0,
-     "jeonse": {
-      "deposit": 162552,
-      "n": 3,
-      "scope": "같은 읍·면·동"
-     }
-    }
-   ],
-   "notice": {
-    "read": true,
-    "fetch_error": "",
-    "box": {
-     "전매제한": "없음(최초 당첨자발표일(2021.11.22.)로부터 6개월간 적용되어 현재 전매제한 기간 도과) 무순위(사후)",
-     "재당첨제한": "없음 최초",
-     "거주의무기간": "없음",
-     "분양가상한제": "미적용"
-    },
-    "resale_months": 0,
-    "resale_fallback_months": 6,
-    "residence_months": 0,
-    "movein_months": 4,
-    "deposit": 0.1,
-    "deposit_found": [
-     "10"
-    ],
-    "mid_interest": null,
-    "mid_loan": false,
-    "regulated": false,
-    "region_text": "",
-    "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026910291&pblancNo=2026910291&atchmnflSeqNo=2022000&atchmnflSn=2"
-   }
-  },
-  {
-   "key": "무순위:2026910288:2026910288",
-   "kind": "무순위",
-   "detail": {
-    "BSNS_MBY_NM": "화창지구재개발정비사업조합",
-    "CNTRCT_CNCLS_BGNDE": "2026-11-26",
-    "CNTRCT_CNCLS_ENDDE": "2026-11-26",
-    "GNRL_RCEPT_BGNDE": null,
-    "GNRL_RCEPT_ENDDE": null,
-    "HMPG_ADRES": "https://xi.co.kr/YYH",
-    "HOUSE_MANAGE_NO": "2026910288",
-    "HOUSE_NM": "안양자이 더 포레스트",
-    "HOUSE_SECD": "04",
-    "HOUSE_SECD_NM": "무순위",
-    "HSSPLY_ADRES": "경기도 안양시 만안구 석수2동 38번지 일대",
-    "HSSPLY_ZIP": "13905",
-    "MVN_PREARNGE_YM": "202611",
-    "NSPRC_NM": null,
-    "PBLANC_NO": "2026910288",
-    "PBLANC_URL": "https://www.applyhome.co.kr/ai/aia/selectAPTRemndrLttotPblancDetailView.do?houseManageNo=2026910288&pblancNo=2026910288",
-    "PRZWNER_PRESNATN_DE": "2026-11-19",
-    "RCRIT_PBLANC_DE": "2026-11-11",
-    "SPSPLY_RCEPT_BGNDE": null,
-    "SPSPLY_RCEPT_ENDDE": null,
-    "SUBSCRPT_AREA_CODE": "410",
-    "SUBSCRPT_AREA_CODE_NM": "경기",
-    "SUBSCRPT_RCEPT_BGNDE": "2026-11-16",
-    "SUBSCRPT_RCEPT_ENDDE": "2026-11-16",
-    "TOT_SUPLY_HSHLDCO": 1
-   },
-   "models": [
-    {
-     "HOUSE_MANAGE_NO": "2026910288",
-     "HOUSE_TY": "059.9871A",
-     "LTTOT_TOP_AMOUNT": "68270",
-     "MODEL_NO": "01",
-     "PBLANC_NO": "2026910288",
-     "SPSPLY_HSHLDCO": 0,
-     "SUPLY_AR": null,
-     "SUPLY_HSHLDCO": 1
-    }
-   ],
-   "sido": "경기도",
-   "sigungu": "안양시 만안구",
-   "umd": "석수2동",
-   "closed": true,
-   "rent": false,
-   "notes": [],
-   "types": [
-    {
-     "ty": "059.9871A",
-     "area": 59.9871,
-     "price": 68270,
-     "cmp": {
-      "method": "v2c",
-      "per": 1184.2396757830663,
-      "market": 71039,
-      "gain": 2769,
-      "rate": 0.04055954299106489,
-      "scope": "분양가 × 예상 웃돈 +4.1%(주변 시세 ÷ 분양가 +12%)",
-      "range": [
-       65906,
-       73320
-      ],
-      "gap": 0.11285767880394036,
-      "v1": {
-       "scope": "같은 시·군·구 분양권·입주권",
-       "market": 76426,
-       "rate": 0.11946682290903765
-      },
-      "trend": 0.048001962435403556
-     },
-     "gen": 1,
-     "total": 1,
-     "first": 0,
-     "supply": 0.0,
-     "jeonse": {
-      "deposit": 50673,
-      "n": 56,
-      "scope": "같은 시·군·구"
-     }
-    }
-   ],
-   "notice": {
-    "read": true,
-    "fetch_error": "",
-    "box": {
-     "전매제한": "최초 당첨자 발표일(2023.11.02.)로부터 1년간 적용되어 현재 전매제한기간 도과 무순위(사후)",
-     "재당첨제한": "없음 최초",
-     "거주의무기간": "없음",
-     "분양가상한제": "미적용"
-    },
-    "resale_months": null,
-    "resale_fallback_months": 6,
-    "residence_months": 0,
-    "movein_months": 0,
-    "deposit": 0.1,
-    "deposit_found": [
-     "10"
-    ],
-    "mid_interest": null,
-    "mid_loan": false,
-    "regulated": false,
-    "region_text": "",
-    "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026910288&pblancNo=2026910288&atchmnflSeqNo=2020031&atchmnflSn=6"
    }
   }
  ],
