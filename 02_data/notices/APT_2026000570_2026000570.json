@@ -1,0 +1,28 @@
+{
+ "read": true,
+ "fetch_error": "",
+ "box": {
+  "해당지역": "세종특별자치시 1년 이상 계속 거주자 (2025.11.27. 이전부터 계속 거주)",
+  "기타지역": "세종특별자치시 1년 미만 계속 거주자 및 전국 거주자",
+  "주택유형": "민영",
+  "규제지역여부": "비규제지역",
+  "재당첨제한": "10년",
+  "전매제한": "1년",
+  "거주의무기간": "없음",
+  "분양가상한제": "적용",
+  "택지유형": "공공택지"
+ },
+ "resale_months": 12,
+ "resale_fallback_months": 12,
+ "residence_months": 0,
+ "movein_months": 37,
+ "deposit": 0.1,
+ "deposit_found": [
+  "10"
+ ],
+ "mid_interest": null,
+ "mid_loan": true,
+ "regulated": false,
+ "region_text": "세종특별자치시 1년 이상 계속 거주자 (2025.11.27. 이전부터 계속 거주)  세종특별자치시 1년 미만 계속 거주자 및 전국 거주자",
+ "pdf_url": "https://static.applyhome.co.kr/ai/aia/getAtchmnfl.do?houseManageNo=2026000570&pblancNo=2026000570&atchmnflSeqNo=2026046&atchmnflSn=5"
+}
